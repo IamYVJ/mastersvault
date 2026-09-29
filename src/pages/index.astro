@@ -1,0 +1,103 @@
+---
+import Base from '../layouts/Base.astro';
+import { getExams } from '../lib/content/index.ts';
+import { url } from '../lib/url';
+
+const exams = getExams();
+const features = [
+  {
+    title: 'Full-length mocks',
+    body: 'Timed, three-section tests with the same flow as the real exam: choose your section order, bookmark questions, take the optional break, then review and edit.',
+  },
+  {
+    title: 'Section practice',
+    body: 'Shorter sets for one section or one topic. Take them timed or untimed, and see explanations after each question or at the end.',
+  },
+  {
+    title: 'Revision notes',
+    body: 'Concise notes, formula sheets and strategy guides for every topic the exam covers.',
+  },
+  {
+    title: 'Private by design',
+    body: 'No accounts and no tracking. Your attempts and progress stay in your own browser, and you can export them whenever you like.',
+  },
+];
+---
+
+<Base>
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Free and open source</p>
+      <h1>Practice that feels like test day.</h1>
+      <p class="lead">
+        MastersVault offers original mock tests, section practice and revision notes for graduate admissions exams.
+        The test screen works like the real one.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href={url('/gmat/')}>Start GMAT prep</a>
+        <a class="btn" href={url('/gmat/practice/')}>Try a practice set</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="container page">
+    <div class="grid">
+      {
+        features.map((f) => (
+          <div class="card">
+            <h3>{f.title}</h3>
+            <p class="muted">{f.body}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <section class="section">
+      <h2>Exams</h2>
+      <div class="grid">
+        {
+          exams.map((e) => (
+            <a class="card exam-card" href={url(`/${e.id}/`)}>
+              <h3>{e.config.name}</h3>
+              <p class="muted">{e.config.description}</p>
+              <p class="small">
+                {e.config.sections.map((s) => s.shortName).join(' · ')} · {e.mocks.length} mocks ·{' '}
+                {e.practice.length} practice sets
+              </p>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--border);
+    background:
+      radial-gradient(1200px 400px at 20% -10%, var(--accent-soft), transparent 70%),
+      var(--bg);
+  }
+  .lead {
+    max-width: 60ch;
+    font-size: 1.15rem;
+    color: var(--text-muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .exam-card {
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+  .exam-card:hover {
+    border-color: var(--accent);
+    color: inherit;
+  }
+</style>

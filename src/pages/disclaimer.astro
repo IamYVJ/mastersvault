@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import { DISCLAIMER, SITE } from '../lib/site';
+---
+
+<Base title="Disclaimer" description="MastersVault is independent and not affiliated with any test maker.">
+  <div class="container page prose">
+    <h1>Disclaimer</h1>
+    <p class="notice">{DISCLAIMER}</p>
+
+    <h2>No affiliation</h2>
+    <p>
+      {SITE.name} is an independent educational project. It is not affiliated with, endorsed by, sponsored by or
+      otherwise connected to the Graduate Management Admission Council (GMAC), Pearson VUE or any other organisation
+      that writes, owns or administers an admissions test. Exam names appear on this site only to describe what the
+      practice material is for.
+    </p>
+
+    <h2>Original content</h2>
+    <p>
+      All questions, passages, explanations and revision notes are original works written for {SITE.name}. None are
+      official test questions.
+    </p>
+
+    <h2>The test screen</h2>
+    <p>
+      The test screen copies the <em>format and rules</em> of the exam (section timing, question types, navigation and
+      review) so that practice feels realistic. It doesn't reproduce any official software, branding or design.
+    </p>
+
+    <h2>Scores</h2>
+    <p>
+      Scores shown after a mock or practice set are rough, unofficial estimates based on the questions you answered
+      here. They don't predict your official score, and you shouldn't use them in any application.
+    </p>
+
+    <h2>No warranty</h2>
+    <p>
+      The material is provided as is. We work hard to keep it accurate, but mistakes can happen, and you can report
+      them on <a href={SITE.repo}>GitHub</a>.
+    </p>
+  </div>
+</Base>

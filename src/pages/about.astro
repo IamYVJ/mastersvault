@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../lib/site';
+import { url } from '../lib/url';
+---
+
+<Base title="About" description="What MastersVault is and how it's made.">
+  <div class="container page prose">
+    <h1>About {SITE.name}</h1>
+    <p>
+      {SITE.name} is a free, open-source practice site for graduate admissions tests. It offers full-length mock
+      tests, shorter section practice and revision notes, all delivered on a test screen that works like the real
+      exam's. That way, the timer, the navigation rules and the question formats won't surprise you on test day.
+    </p>
+
+    <h2>Original questions</h2>
+    <p>
+      Every question on this site is written for {SITE.name}. We don't copy, adapt or paraphrase questions from
+      official guides, official practice tests or other prep providers. Each question is checked for a single
+      defensible answer and comes with a full explanation.
+    </p>
+
+    <h2>Found a mistake?</h2>
+    <p>
+      Every question has a "Report an issue" link that opens a pre-filled issue on <a href={SITE.repo}>GitHub</a>.
+      Corrections are very welcome.
+    </p>
+
+    <h2>Independence</h2>
+    <p>
+      {SITE.name} is independent and has no connection to any test maker. See the <a href={url('/disclaimer/')}
+        >disclaimer</a
+      > for details.
+    </p>
+  </div>
+</Base>

@@ -1,0 +1,58 @@
+---
+import { DISCLAIMER, SITE } from '../../lib/site';
+import { url } from '../../lib/url';
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="disclaimer">{DISCLAIMER}</p>
+    <div class="row">
+      <nav aria-label="Footer">
+        <a href={url('/about/')}>About</a>
+        <a href={url('/disclaimer/')}>Disclaimer</a>
+        <a href={url('/privacy/')}>Privacy</a>
+        <a href={SITE.repo}>Source on GitHub</a>
+      </nav>
+      <p class="license">
+        Questions and notes: <a href={SITE.contentLicense.url}>{SITE.contentLicense.name}</a> · Code:
+        <a href={SITE.codeLicense.url}>{SITE.codeLicense.name}</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 28px 0 36px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  .disclaimer {
+    max-width: 90ch;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 24px;
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  nav a {
+    color: var(--text-muted);
+  }
+  nav a:hover {
+    color: var(--text);
+  }
+  .license {
+    margin: 0;
+  }
+  .license a {
+    color: inherit;
+  }
+</style>

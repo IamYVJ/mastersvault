@@ -1,0 +1,18 @@
+---
+import Base from '../../../layouts/Base.astro';
+import TestIntro from '../../../components/site/TestIntro.astro';
+import { getExam, listExamIds } from '../../../lib/content/index.ts';
+
+export function getStaticPaths() {
+  return listExamIds().flatMap((exam) =>
+    getExam(exam).mocks.map((test) => ({ params: { exam, test: test.id } })),
+  );
+}
+
+const exam = getExam(Astro.params.exam);
+const test = exam.mocks.find((t) => t.id === Astro.params.test)!;
+---
+
+<Base title={test.title} description={test.description}>
+  <TestIntro exam={exam} test={test} />
+</Base>

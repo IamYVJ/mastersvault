@@ -1,0 +1,67 @@
+---
+import type { ExamBundle } from '../../lib/content/index.ts';
+import type { TestDef } from '../../lib/content/load.ts';
+import { url } from '../../lib/url';
+
+interface Props {
+  exam: ExamBundle;
+  test: TestDef;
+}
+const { exam, test } = Astro.props;
+const { config } = exam;
+const rows = test.sections.map((s) => ({ ...s, config: config.sections.find((c) => c.id === s.id)! }));
+const minutes = rows.reduce((n, s) => n + s.timeMinutes, 0);
+const listHref = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}/`);
+---
+
+<div class="container page">
+  <p class="small"><a href={listHref}>← {test.kind === 'mock' ? 'All mocks' : 'All practice sets'}</a></p>
+  <header class="page-head">
+    <p class="eyebrow">{config.name} · {test.kind === 'mock' ? 'Mock test' : 'Practice set'}</p>
+    <h1>{test.title}</h1>
+    {test.description && <p>{test.description}</p>}
+  </header>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th scope="col">Section</th>
+          <th scope="col" class="num">Questions</th>
+          <th scope="col" class="num">Time</th>
+          <th scope="col">Tools</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((s) => (
+            <tr>
+              <td>{s.config.name}</td>
+              <td class="num">{s.questions.length}</td>
+              <td class="num">{s.timeMinutes} min</td>
+              <td>{s.config.tools.length ? s.config.tools.join(', ') : '—'}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="start">
+    <button class="btn btn-primary" type="button" disabled>Start ({minutes} min)</button>
+    <p class="muted small">The test screen is under construction and will be switched on in the next update.</p>
+  </div>
+</div>
+
+<style>
+  .start {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+  }
+  .start p {
+    margin: 0;
+  }
+</style>

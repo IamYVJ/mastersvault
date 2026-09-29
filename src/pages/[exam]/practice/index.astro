@@ -1,0 +1,43 @@
+---
+import Base from '../../../layouts/Base.astro';
+import TestCard from '../../../components/site/TestCard.astro';
+import { getExam, listExamIds } from '../../../lib/content/index.ts';
+
+export function getStaticPaths() {
+  return listExamIds().map((exam) => ({ params: { exam } }));
+}
+
+const exam = getExam(Astro.params.exam);
+const { config } = exam;
+const bySection = config.sections.map((s) => ({ section: s, tests: exam.practice.filter((t) => t.sections[0].id === s.id) }));
+---
+
+<Base title={`${config.name} section practice`}>
+  <div class="container page">
+    <header class="page-head">
+      <p class="eyebrow">{config.name}</p>
+      <h1>Section practice</h1>
+      <p>
+        Short sets for one section at a time. They use the same test screen as the mocks, and you can take them timed
+        or untimed.
+      </p>
+    </header>
+
+    {
+      bySection.map(({ section, tests }) => (
+        <section class="section">
+          <h2>{section.name}</h2>
+          {tests.length ? (
+            <div class="grid">
+              {tests.map((test) => (
+                <TestCard exam={exam} test={test} />
+              ))}
+            </div>
+          ) : (
+            <p class="muted">No practice sets yet.</p>
+          )}
+        </section>
+      ))
+    }
+  </div>
+</Base>

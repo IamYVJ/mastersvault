@@ -1,0 +1,64 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { getExam, listExamIds } from '../../../lib/content/index.ts';
+
+export function getStaticPaths() {
+  return listExamIds().map((exam) => ({ params: { exam } }));
+}
+
+const exam = getExam(Astro.params.exam);
+const { config } = exam;
+const countFor = (sectionId: string, topicId: string) =>
+  [...exam.questions.values()].filter((q) => q.section === sectionId && q.data.topics.includes(topicId)).length;
+---
+
+<Base title={`${config.name} revision`}>
+  <div class="container page">
+    <header class="page-head">
+      <p class="eyebrow">{config.name}</p>
+      <h1>Revision</h1>
+      <p>
+        Topic notes, formula sheets and strategy guides are being written. They'll be organised by the topics below,
+        which match how practice questions are tagged.
+      </p>
+    </header>
+
+    <div class="grid">
+      {
+        config.sections.map((s) => (
+          <div class="card">
+            <h3>{s.name}</h3>
+            <ul class="topics">
+              {s.topics.map((t) => (
+                <li>
+                  <span>{t.name}</span>
+                  <span class="badge">{countFor(s.id, t.id)} Qs</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<style>
+  .topics {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .topics li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .topics li:last-child {
+    border-bottom: 0;
+  }
+</style>

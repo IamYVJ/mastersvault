@@ -1,0 +1,452 @@
+/* Question views. Shared by the test player, results review and preview. */
+
+.q-view {
+  --q-pane-pad: 20px;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------------- layout */
+.q-single .q-main {
+  max-width: 820px;
+}
+
+.q-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.q-split .q-stimulus {
+  border-right: 1px solid var(--border);
+  padding: var(--q-pane-pad);
+  max-height: var(--q-split-height, 70vh);
+  overflow-y: auto;
+}
+.q-split .q-main {
+  padding: var(--q-pane-pad);
+  max-height: var(--q-split-height, 70vh);
+  overflow-y: auto;
+}
+@media (max-width: 860px) {
+  .q-split {
+    grid-template-columns: 1fr;
+  }
+  .q-split .q-stimulus {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    max-height: none;
+  }
+  .q-split .q-main {
+    max-height: none;
+  }
+}
+
+.q-main > * + * {
+  margin-top: 18px;
+}
+
+/* ----------------------------------------------------------------- prose */
+.q-prose p {
+  margin: 0 0 0.9em;
+}
+.q-prose p:last-child {
+  margin-bottom: 0;
+}
+.q-prose ul,
+.q-prose ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.3em;
+}
+.q-prose li + li {
+  margin-top: 0.3em;
+}
+.q-prose table {
+  border-collapse: collapse;
+  margin: 0.4em 0 1em;
+  font-size: 0.95rem;
+  width: 100%;
+}
+.q-prose th,
+.q-prose td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.q-prose th {
+  background: var(--surface-2);
+}
+.q-prose td[align='right'],
+.q-prose th[align='right'] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.q-prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+.q-passage {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+/* --------------------------------------------------- data sufficiency */
+.ds-statements {
+  list-style: none;
+  padding: 0;
+  margin: 1em 0 0;
+}
+.ds-statements li {
+  display: flex;
+  gap: 0.6em;
+  margin: 0.4em 0;
+}
+.ds-num {
+  font-weight: 600;
+  flex: none;
+}
+
+/* ------------------------------------------------------ choice list */
+.q-choices {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.q-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.q-choice:hover {
+  border-color: var(--border-strong);
+}
+.q-choice.is-chosen {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.q-choice input {
+  margin: 0.3em 0 0;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--accent);
+}
+.q-choice:has(input:disabled) {
+  cursor: default;
+}
+.q-choice-text {
+  flex: 1;
+  min-width: 0;
+}
+.q-letter {
+  flex: none;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 1.2em;
+}
+.q-choice.is-correct {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+.q-choice.is-wrong {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.q-tag {
+  flex: none;
+  align-self: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.1em 0.55em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.q-tag-correct {
+  background: var(--success);
+  color: var(--surface);
+}
+.q-tag-wrong {
+  background: var(--danger);
+  color: var(--surface);
+}
+
+/* ------------------------------------ two-column radio grids (TA, MSR, TPA) */
+.q-grid {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.q-grid th,
+.q-grid td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+.q-grid thead th {
+  background: var(--surface-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
+}
+.q-grid thead th:last-child {
+  text-align: left;
+}
+.q-grid-cell {
+  width: 88px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.q-grid-cell input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.q-grid-cell.is-correct {
+  background: var(--success-soft);
+  box-shadow: inset 0 0 0 2px var(--success);
+}
+.q-grid-cell.is-wrong {
+  background: var(--danger-soft);
+  box-shadow: inset 0 0 0 2px var(--danger);
+}
+.q-grid tr:last-child td {
+  border-bottom: 0;
+}
+@media (max-width: 520px) {
+  .q-grid-cell {
+    width: 56px;
+    padding: 8px 4px;
+  }
+}
+
+/* ------------------------------------------------------ dropdowns (GI) */
+.q-dropdowns {
+  display: grid;
+  gap: 14px;
+}
+.q-dropdown-line {
+  margin: 0;
+  line-height: 2.2;
+}
+.q-dropdown-line select {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  min-width: 7em;
+}
+.q-dropdown-line select.is-correct {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px var(--success);
+}
+.q-dropdown-line select.is-wrong {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+.q-dropdown-line .q-tag {
+  margin-left: 8px;
+}
+
+/* ------------------------------------------------------- data table (TA) */
+.q-table-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+.q-table-tools label {
+  font-weight: 600;
+}
+.q-table-tools select {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+.q-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.q-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.925rem;
+}
+.q-table caption {
+  caption-side: top;
+  text-align: left;
+  padding: 10px 12px 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.q-table th,
+.q-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+.q-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.q-table th {
+  background: var(--surface-2);
+  padding: 0;
+}
+.q-table th button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  white-space: normal;
+  cursor: pointer;
+}
+.q-table th button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.q-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.q-table th.num button {
+  justify-content: flex-end;
+  text-align: right;
+}
+.q-sort-mark {
+  font-size: 0.7em;
+  color: var(--accent-text);
+  min-width: 1em;
+}
+
+/* ----------------------------------------------------------- charts */
+.q-chart {
+  margin: 0;
+  padding: 14px 14px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.q-chart-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+.q-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.q-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.q-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.q-chart-svg .grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.q-chart-svg .axis {
+  stroke: var(--text-subtle);
+  stroke-width: 1.25;
+}
+.q-chart-svg .tick {
+  fill: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.q-chart-svg .axis-label {
+  fill: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+}
+
+/* ------------------------------------------------------ MSR tabs */
+.q-tablist {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin: calc(var(--q-pane-pad) * -1) calc(var(--q-pane-pad) * -1) var(--q-pane-pad);
+  padding: 8px 8px 0;
+  background: var(--surface-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: sticky;
+  top: calc(var(--q-pane-pad) * -1);
+  z-index: 1;
+}
+.q-tablist button {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+.q-tablist button[aria-selected='true'] {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+.q-tabpanel .q-chart {
+  margin-top: 12px;
+}
+
+/* ------------------------------------------------------- explanation */
+.q-explanation {
+  border-top: 1px dashed var(--border-strong);
+  padding-top: 16px;
+}
+.q-explanation h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}

@@ -1,0 +1,133 @@
+---
+// Authoring preview of the whole question bank, with answers and explanations.
+// Only built in `npm run dev`; production builds skip it.
+import Base from '../../layouts/Base.astro';
+import PreviewQuestion from '../../components/questions/PreviewQuestion.tsx';
+import { getExams, renderPassage, renderQuestion, renderSourceSet } from '../../lib/content/index.ts';
+
+export function getStaticPaths() {
+  return import.meta.env.DEV ? [{ params: { slug: undefined } }] : [];
+}
+
+const exams = getExams().map((exam) => {
+  const usage = new Map<string, string[]>();
+  for (const t of [...exam.mocks, ...exam.practice])
+    for (const s of t.sections) for (const q of s.questions) usage.set(q, [...(usage.get(q) ?? []), t.id]);
+  const topicNames = new Map(exam.config.sections.flatMap((s) => s.topics.map((t) => [t.id, t.name] as const)));
+  return {
+    exam,
+    sections: exam.config.sections.map((section) => ({
+      section,
+      items: [...exam.questions.values()]
+        .filter((q) => q.section === section.id)
+        .map((q) => {
+          const { question } = renderQuestion(q);
+          const st = question.stimulus;
+          return {
+            q,
+            question,
+            passage: st?.kind === 'passage' ? renderPassage(exam, st.id).passage : undefined,
+            sources: st?.kind === 'sources' ? renderSourceSet(exam, st.id).sources : undefined,
+            usedIn: usage.get(q.id) ?? [],
+            topics: q.data.topics.map((t) => topicNames.get(t) ?? t),
+          };
+        }),
+    })),
+  };
+});
+---
+
+<Base title="Question bank preview" noindex>
+  <div class="container page">
+    <header class="page-head">
+      <p class="eyebrow">Dev only</p>
+      <h1>Question bank preview</h1>
+      <p>
+        Every question with its answer and explanation, for reviewing content. This page exists only in
+        <code>npm run dev</code>. Edit a file in <code>content/</code> and the page reloads.
+      </p>
+    </header>
+
+    {
+      exams.map(({ exam, sections }) => (
+        <>
+          <nav class="jump">
+            {sections.map(({ section, items }) => (
+              <a href={`#${exam.id}-${section.id}`}>
+                {section.name} ({items.length})
+              </a>
+            ))}
+          </nav>
+          {sections.map(({ section, items }) => (
+            <section class="section" id={`${exam.id}-${section.id}`}>
+              <h2>
+                {exam.config.name} · {section.name}
+              </h2>
+              {items.map(({ q, question, passage, sources, usedIn, topics }) => (
+                <article class="item" id={q.id}>
+                  <header class="meta">
+                    <a href={`#${q.id}`} class="qid">
+                      {q.id}
+                    </a>
+                    <span class="badge">{q.data.type}</span>
+                    <span class="badge">difficulty {q.data.difficulty}</span>
+                    <span class={`badge ${q.data.status === 'reviewed' ? 'badge-accent' : 'badge-warning'}`}>
+                      {q.data.status}
+                    </span>
+                    {topics.map((t) => (
+                      <span class="badge">{t}</span>
+                    ))}
+                    <span class="muted small">{usedIn.length ? `in ${usedIn.join(', ')}` : 'unused'}</span>
+                  </header>
+                  <PreviewQuestion client:visible question={question} passage={passage} sources={sources} />
+                </article>
+              ))}
+            </section>
+          ))}
+        </>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    position: sticky;
+    top: 60px;
+    z-index: 5;
+    padding: 10px 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .item {
+    margin: 24px 0 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .qid {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  :global(.preview-q-bar) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  :global(.preview-q-bar .btn) {
+    min-height: 32px;
+    padding: 0.25em 0.8em;
+    font-size: 0.85rem;
+  }
+</style>

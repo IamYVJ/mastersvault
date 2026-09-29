@@ -1,0 +1,49 @@
+---
+import Base from '../../../layouts/Base.astro';
+import TestCard from '../../../components/site/TestCard.astro';
+import { getExam, listExamIds } from '../../../lib/content/index.ts';
+import { url } from '../../../lib/url';
+
+export function getStaticPaths() {
+  return listExamIds().map((exam) => ({ params: { exam } }));
+}
+
+const exam = getExam(Astro.params.exam);
+const { config } = exam;
+const minutes = config.sections.reduce((n, s) => n + s.timeMinutes, 0);
+const questions = config.sections.reduce((n, s) => n + s.questionCount, 0);
+---
+
+<Base title={`${config.name} mock tests`}>
+  <div class="container page">
+    <header class="page-head">
+      <p class="eyebrow">{config.name}</p>
+      <h1>Mock tests</h1>
+      <p>
+        Full-length tests with {questions} questions in {minutes} minutes across all {config.sections.length} sections.
+        Each mock uses its own questions, so you never see a mock question twice. Set aside {
+          Math.ceil((minutes + (config.rules.optionalBreak?.minutes ?? 0)) / 15) * 15
+        } minutes in a quiet place and take it in one sitting.
+      </p>
+    </header>
+
+    {
+      exam.mocks.length ? (
+        <div class="grid">
+          {exam.mocks.map((test) => (
+            <TestCard exam={exam} test={test} />
+          ))}
+        </div>
+      ) : (
+        <div class="notice">
+          <p>
+            <strong>Mocks are being written.</strong> Each one needs {questions} original, reviewed questions.
+          </p>
+          <p style="margin: 0">
+            In the meantime, try a <a href={url(`/${exam.id}/practice/`)}>practice set</a>.
+          </p>
+        </div>
+      )
+    }
+  </div>
+</Base>
