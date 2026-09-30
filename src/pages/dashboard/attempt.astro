@@ -1,0 +1,24 @@
+---
+// Full results for one finished attempt from the history: /dashboard/attempt/?id=…
+import Base from '../../layouts/Base.astro';
+import AttemptViewer from '../../components/dashboard/AttemptViewer.tsx';
+import { buildCatalog } from '../../lib/content/catalog.ts';
+import { url } from '../../lib/url';
+
+const { tests } = buildCatalog(url, import.meta.env.DEV);
+const viewerTests = Object.fromEntries(Object.entries(tests).map(([k, t]) => [k, { dataUrl: t.dataUrl, href: t.href }]));
+---
+
+<Base title="Past result" bare noindex>
+  <AttemptViewer client:only="react" dashboardUrl={url('/dashboard/')} tests={viewerTests}>
+    <p slot="fallback" class="player-boot">Loading results…</p>
+  </AttemptViewer>
+</Base>
+
+<style is:global>
+  .player-boot {
+    margin: 20vh auto 0;
+    text-align: center;
+    color: var(--text-muted);
+  }
+</style>

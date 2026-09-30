@@ -1,9 +1,11 @@
 // Entry point for Astro pages and scripts.
 import path from 'node:path';
 import { CONTENT_ROOT, listExamIds, loadExam, type ExamBundle, type Issue } from './load.ts';
+import { renderDocument } from './markdown.ts';
 import { renderPassage, renderQuestion, renderSourceSet } from './payload.ts';
 
-export { listExamIds, type ExamBundle, type Issue } from './load.ts';
+export { GENERAL_NOTES, listExamIds, type ExamBundle, type Issue, type Note } from './load.ts';
+export { renderDocument, type Heading } from './markdown.ts';
 export { buildTestPayload, renderQuestion, renderPassage, renderSourceSet } from './payload.ts';
 
 const cache = new Map<string, ExamBundle>();
@@ -52,6 +54,7 @@ export function checkContent(root = CONTENT_ROOT): { exams: ExamBundle[]; issues
     for (const q of bundle.questions.values()) if (ok(q.file)) report(q.file, renderQuestion(q).problems);
     for (const p of bundle.passages.values()) if (ok(p.file)) report(p.file, renderPassage(bundle, p.id).problems);
     for (const s of bundle.sources.values()) if (ok(s.file)) report(s.file, renderSourceSet(bundle, s.id).problems);
+    for (const n of bundle.notes.values()) if (ok(n.file)) report(n.file, renderDocument(n.body).problems);
   }
   return { exams, issues };
 }

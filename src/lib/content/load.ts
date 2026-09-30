@@ -6,6 +6,7 @@
 //   content/<exam>/sources/<id>.yaml         (Multi-Source Reasoning tabs)
 //   content/<exam>/tests/mocks/<id>.yaml
 //   content/<exam>/tests/practice/<id>.yaml
+//   content/<exam>/revision/<section|general>/<slug>.md
 import fs from 'node:fs';
 import path from 'node:path';
 import type { z } from 'zod';
@@ -13,6 +14,7 @@ import {
   BLANK,
   examSchema,
   mockSchema,
+  noteSchema,
   passageSchema,
   practiceSchema,
   questionSchemas,
@@ -20,6 +22,7 @@ import {
   sourceSetSchema,
   type Chart,
   type ExamConfig,
+  type NoteData,
   type QuestionData,
   type QuestionType,
   type SourceSetData,
@@ -57,6 +60,19 @@ export interface SourceSet {
   data: SourceSetData;
 }
 
+export interface Note {
+  /** <folder>/<slug>, e.g. quant/percents */
+  id: string;
+  /** A section id, or "general" for notes that span the whole exam. */
+  folder: string;
+  slug: string;
+  file: string;
+  data: NoteData;
+  body: string;
+}
+
+export const GENERAL_NOTES = 'general';
+
 export interface TestDef {
   id: string;
   kind: 'mock' | 'practice';
@@ -74,6 +90,7 @@ export interface ExamBundle {
   sources: Map<string, SourceSet>;
   mocks: TestDef[];
   practice: TestDef[];
+  notes: Map<string, Note>;
 }
 
 /** Filename prefix expected for each question type, e.g. ps-0001.md. */
@@ -221,6 +238,37 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
     }
   }
 
+  // ---------------------------------------------------------- revision notes
+  const notes = new Map<string, Note>();
+  const revisionDir = path.join(dir, 'revision');
+  const noteFolders = fs.existsSync(revisionDir)
+    ? fs.readdirSync(revisionDir, { withFileTypes: true }).filter((d) => d.isDirectory())
+    : [];
+  for (const d of noteFolders) {
+    const section = sections.get(d.name);
+    for (const { id: slug, file } of list(path.join('revision', d.name), /\.md$/)) {
+      if (!section && d.name !== GENERAL_NOTES) {
+        error(file, `folder "${d.name}" must be a section id from exam.yaml or "${GENERAL_NOTES}"`);
+        continue;
+      }
+      const fm = tryRead(file, parseFrontmatter);
+      if (!fm) continue;
+      const data = parse(noteSchema, fm.data, file);
+      if (!data) continue;
+      if (!fm.body.trim()) error(file, 'note body is empty');
+      if (data.kind === 'topic' && !data.topics.length) error(file, 'topics: a topic note must list the topics it covers');
+      if (!section && data.topics.length) error(file, 'topics: general notes cannot list section topics');
+      if (section) {
+        const topicIds = new Set(section.topics.map((t) => t.id));
+        for (const t of data.topics) if (!topicIds.has(t)) error(file, `unknown topic "${t}" for section "${section.id}"`);
+        for (const t of data.questionTypes)
+          if (!section.questionTypes.includes(t)) error(file, `question type "${t}" is not in section "${section.id}"`);
+      }
+      const id = `${d.name}/${slug}`;
+      notes.set(id, { id, folder: d.name, slug, file, data, body: fm.body.trim() });
+    }
+  }
+
   // ------------------------------------------------------------------- tests
   const checkSequence = (file: string, label: string, ids: string[], sectionId: string) => {
     const seen = new Set<string>();
@@ -313,7 +361,7 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
   const referencedSources = new Set([...questions.values()].map((q) => (q.data.type === 'multi-source-reasoning' ? q.data.source : '')));
   for (const s of sources.values()) if (!referencedSources.has(s.id)) warn(s.file, 'source set is not used by any question');
 
-  return { bundle: { id: examId, config, questions, passages, sources, mocks, practice }, issues };
+  return { bundle: { id: examId, config, questions, passages, sources, mocks, practice, notes }, issues };
 }
 
 function groupKey(q: QuestionData): string | null {

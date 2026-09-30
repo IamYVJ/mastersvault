@@ -40,10 +40,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     </script>
   </head>
   <body class:list={{ bare }}>
-    {!bare && <Header />}
-    <main id="main">
-      <slot />
-    </main>
-    {!bare && <Footer />}
+    {
+      bare ? (
+        <slot />
+      ) : (
+        <>
+          <Header />
+          <main id="main">
+            <slot />
+          </main>
+          <Footer />
+        </>
+      )
+    }
   </body>
 </html>

@@ -12,6 +12,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
+    "test:e2e": "astro build && playwright test",
     "validate": "node scripts/validate-content.ts",
     "coverage": "node scripts/coverage.ts"
   },
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.19.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

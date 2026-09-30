@@ -1,0 +1,109 @@
+---
+import 'katex/dist/katex.min.css';
+import '../../../../styles/note.css';
+import Base from '../../../../layouts/Base.astro';
+import { GENERAL_NOTES, getExam, listExamIds, renderDocument } from '../../../../lib/content/index.ts';
+import { KIND_LABELS, noteHref, practiceFor, sortedNotes } from '../../../../lib/content/revision.ts';
+import { TYPE_LABELS } from '../../../../lib/content/labels.ts';
+import { url } from '../../../../lib/url';
+
+export function getStaticPaths() {
+  return listExamIds().flatMap((exam) =>
+    [...getExam(exam).notes.values()].map((n) => ({ params: { exam, folder: n.folder, note: n.slug } })),
+  );
+}
+
+const exam = getExam(Astro.params.exam);
+const note = exam.notes.get(`${Astro.params.folder}/${Astro.params.note}`)!;
+const section = exam.config.sections.find((s) => s.id === note.folder);
+const { html, headings } = renderDocument(note.body);
+const toc = headings.filter((h) => h.depth === 2);
+const topicNames = new Map(section?.topics.map((t) => [t.id, t.name]) ?? []);
+const practice = practiceFor(exam, note);
+const siblings = sortedNotes(exam, note.folder);
+const at = siblings.findIndex((n) => n.id === note.id);
+const prev = siblings[at - 1];
+const next = siblings[at + 1];
+const where = note.folder === GENERAL_NOTES ? 'Whole exam' : section!.name;
+---
+
+<Base title={note.data.title} description={note.data.summary}>
+  <div class="container page">
+    <p class="small"><a href={url(`/${exam.id}/revision/`)}>← All revision notes</a></p>
+    <header class="page-head">
+      <p class="eyebrow">{where} · {KIND_LABELS[note.data.kind]}</p>
+      <h1>{note.data.title}</h1>
+      <p>{note.data.summary}</p>
+      {
+        (note.data.topics.length > 0 || note.data.questionTypes.length > 0) && (
+          <p class="chips">
+            {note.data.questionTypes.map((t) => (
+              <span class="badge badge-accent">{TYPE_LABELS[t]}</span>
+            ))}
+            {note.data.topics.map((t) => (
+              <span class="badge">{topicNames.get(t) ?? t}</span>
+            ))}
+          </p>
+        )
+      }
+    </header>
+
+    <div class="note-layout">
+      {
+        toc.length > 2 && (
+          <nav class="note-toc" aria-label="On this page">
+            <p class="note-toc-title">On this page</p>
+            <ul>
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.id}`}>{h.text}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+      <article class="note-body" set:html={html} />
+    </div>
+
+    {
+      practice.length > 0 && (
+        <aside class="notice note-practice">
+          <h2>Practise this</h2>
+          <ul>
+            {practice.map(({ test, matches }) => (
+              <li>
+                <a href={url(`/${exam.id}/practice/${test.id}/`)}>{test.title}</a>
+                <span class="muted small">
+                  {' '}
+                  · {matches} {matches === 1 ? 'question' : 'questions'} on this
+                </span>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+
+    <nav class="note-pager" aria-label="More notes">
+      {
+        prev ? (
+          <a href={url(noteHref(exam.id, prev))}>
+            <span class="muted small">Previous</span>
+            <span>{prev.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a href={url(noteHref(exam.id, next))} class="is-next">
+            <span class="muted small">Next</span>
+            <span>{next.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</Base>

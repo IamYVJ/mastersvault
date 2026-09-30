@@ -2,6 +2,7 @@
 // and which questions are not yet used in any test.
 //   npm run coverage
 import { getExams } from '../src/lib/content/index.ts';
+import { notesByTopic } from '../src/lib/content/revision.ts';
 
 const pad = (s: string | number, n: number) => String(s).padEnd(n);
 const padL = (s: string | number, n: number) => String(s).padStart(n);
@@ -11,6 +12,7 @@ for (const exam of getExams()) {
   const used = new Set([...exam.mocks, ...exam.practice].flatMap((t) => t.sections.flatMap((s) => s.questions)));
   console.log(`\n=== ${exam.config.name} (${exam.id}) — ${all.length} questions, ${exam.mocks.length} mocks, ${exam.practice.length} practice sets`);
 
+  const notes = notesByTopic(exam);
   for (const section of exam.config.sections) {
     const qs = all.filter((q) => q.section === section.id);
     console.log(`\n${section.name}: ${qs.length} questions (${qs.filter((q) => q.data.status === 'reviewed').length} reviewed)`);
@@ -23,7 +25,8 @@ for (const exam of getExams()) {
     console.log('  topics:');
     for (const topic of section.topics) {
       const n = qs.filter((q) => q.data.topics.includes(topic.id)).length;
-      console.log(`    ${pad(topic.name, 34)}${padL(n, 4)}${n === 0 ? '  ← none yet' : ''}`);
+      const note = notes.has(`${section.id}/${topic.id}`) ? '  note' : '  no note';
+      console.log(`    ${pad(topic.name, 34)}${padL(n, 4)}${note}${n === 0 ? '  ← no questions yet' : ''}`);
     }
   }
 

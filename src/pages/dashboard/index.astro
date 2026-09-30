@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import Dashboard from '../../components/dashboard/Dashboard.tsx';
+import { buildCatalog } from '../../lib/content/catalog.ts';
+import { url } from '../../lib/url';
+
+const { tests, topics, sections } = buildCatalog(url, import.meta.env.DEV);
+const catalog = {
+  tests: Object.fromEntries(Object.entries(tests).map(([k, t]) => [k, { title: t.title, href: t.href }])),
+  topics,
+  sections,
+  links: {
+    practice: url('/gmat/practice/'),
+    mocks: url('/gmat/mocks/'),
+    revision: url('/gmat/revision/'),
+    attempt: url('/dashboard/attempt/'),
+  },
+};
+---
+
+<Base title="Dashboard" description="Your results, progress and weak spots, stored only in this browser.">
+  <div class="container page">
+    <header class="page-head">
+      <h1>Dashboard</h1>
+      <p>
+        Your results, how they're trending, and the topics to work on next. Everything here is stored only in this
+        browser. There are no accounts, and nothing is sent to a server.
+      </p>
+    </header>
+    <Dashboard client:only="react" catalog={catalog}>
+      <p slot="fallback" class="muted">Loading your progress…</p>
+    </Dashboard>
+    <noscript><p class="muted">The dashboard needs JavaScript to read your saved progress.</p></noscript>
+  </div>
+</Base>

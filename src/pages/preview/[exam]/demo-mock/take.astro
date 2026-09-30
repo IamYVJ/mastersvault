@@ -1,0 +1,22 @@
+---
+// Dev only: the test player running the demo mock (see src/lib/content/demo.ts).
+import Base from '../../../../layouts/Base.astro';
+import TestPlayer from '../../../../components/player/TestPlayer.tsx';
+import { listExamIds } from '../../../../lib/content/index.ts';
+import { url } from '../../../../lib/url';
+
+export function getStaticPaths() {
+  return import.meta.env.DEV ? listExamIds().map((exam) => ({ params: { exam } })) : [];
+}
+
+const { exam } = Astro.params;
+---
+
+<Base title="Demo mock" bare noindex>
+  <TestPlayer
+    client:only="react"
+    payloadUrl={url(`/preview/${exam}/demo-mock.json`)}
+    testKey={`${exam}/preview/demo-mock`}
+    exitUrl={url('/preview/')}
+  />
+</Base>

@@ -26,23 +26,31 @@ Decisions (September 2026):
 - [x] Dev-only question bank preview
 - [x] 18 sample questions and 3 sampler practice sets (drafts, awaiting review)
 
-## Phase 2: Test engine core
-- [ ] Full-screen test player: header (section, timer, question n of N, bookmark), footer (Next)
-- [ ] State machine: intro → section order → instructions → section → review & edit → break → … → results
-- [ ] Timestamp-based timers that survive tab sleep, auto-submit when time runs out
-- [ ] Answer-to-advance and no-back rules, bookmarks, Review & Edit with a 3-change limit
-- [ ] Autosave to localStorage, resume after refresh
-- [ ] Practice mode: untimed option, back navigation, per-question explanations
+## Phase 2: Test engine core ✅
+- [x] Full-screen test player: header (section, timer with hide toggle, question n of N, bookmark), footer (exit, back/next)
+- [x] State machine: setup → section order → instructions → section → review & edit → break → … → results (`src/lib/engine/attempt.ts`)
+- [x] Timestamp-based timers that survive tab sleep; 5-minute warning; section ends automatically when time runs out
+- [x] Answer-to-advance and no-back rules, bookmarks, Review & Edit with a 3-change limit, one optional break after section 1 or 2
+- [x] Autosave to localStorage, resume after refresh or closing (the timer pauses while away), stale attempts discarded when a test's answer keys change
+- [x] Practice mode: timed or untimed, back navigation, skip, explanations after each question or at the end
+- [x] Basic results: raw score per section, time used, per-question outcome and time, full review with explanations
+- [x] Finished attempts saved to a local history (`mv:history`) for the dashboard
+- [x] Dev-only demo mock at `/mastersvault/preview/gmat/demo-mock/take/` to try the mock flow before real mocks exist
 
-## Phase 3: Tools and results
-- [ ] On-screen calculator (DI only), whiteboard/scratchpad
-- [ ] Results: unofficial scaled-score estimate, accuracy by type/topic/difficulty, timing vs. target
-- [ ] Review screen with explanations and "report an issue" links
-- [ ] Playwright end-to-end run of a full practice set
+## Phase 3: Tools and results ✅
+- [x] On-screen calculator for sections that allow it (memory, √, %, 1/x, keyboard input), in a movable panel (`src/lib/engine/calculator.ts`)
+- [x] Whiteboard (pen, eraser, undo, clear) in every section; tools keep their contents for the whole section
+- [x] Unofficial score estimates for mocks: section scores with a likely range and a total, from a difficulty-weighted ability estimate (`src/lib/engine/scoring.ts`)
+- [x] Results: pacing chart (time per question vs. target), accuracy by question type, difficulty and topic, slow/rushed flags
+- [x] Playwright end-to-end tests against the production build: full practice run, resume after reload, calculator and whiteboard. They run in CI.
 
-## Phase 4: Practice and revision
-- [ ] Dashboard with attempt history, trends, export/import as JSON
-- [ ] Revision notes (MDX) per topic, formula sheets, strategy guides
+## Phase 4: Dashboard and revision ✅
+- [x] Dashboard: unfinished attempts with Resume, summary tiles, accuracy-by-section trend chart, weakest topics with links to their notes, full history
+- [x] Reopen any past result with the full review (`/dashboard/attempt/?id=…`)
+- [x] Export, import and delete progress; imports are validated field by field and never overwrite an unfinished attempt
+- [x] Revision notes as Markdown + KaTeX in `content/<exam>/revision/` (plain Markdown instead of MDX, matching the question format), validated like questions
+- [x] 11 notes: test-day strategy, Quant formula sheet, percents, number properties, rates and work, statistics, CR and RC strategy, Data Sufficiency, tables/graphs/sources, Two-Part Analysis (drafts, awaiting review)
+- [x] Note pages with contents, topic tags, related practice sets and previous/next links; the revision index shows which topics have notes
 
 ## Phase 5: Content build-out
 - [ ] Launch: 2 full mocks (128 questions) + 3 practice sets per section (~180 questions), all reviewed

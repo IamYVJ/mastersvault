@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getExam, listExamIds } from '../../lib/content/index.ts';
+import { TYPE_LABELS } from '../../lib/content/labels.ts';
 import { url } from '../../lib/url';
 
 export function getStaticPaths() {
@@ -13,7 +14,6 @@ const totalQuestions = config.sections.reduce((n, s) => n + s.questionCount, 0);
 const totalMinutes = config.sections.reduce((n, s) => n + s.timeMinutes, 0);
 const hours = `${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} min`;
 const r = config.rules;
-const typeLabel = (t: string) => t.replace(/-/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 ---
 
 <Base title={`${config.name} prep`} description={config.description}>
@@ -65,7 +65,7 @@ const typeLabel = (t: string) => t.replace(/-/g, ' ').replace(/^\w/, (c) => c.to
                   </td>
                   <td class="num">{s.questionCount}</td>
                   <td class="num">{s.timeMinutes} min</td>
-                  <td>{s.questionTypes.map(typeLabel).join(', ')}</td>
+                  <td>{s.questionTypes.map((t) => TYPE_LABELS[t]).join(', ')}</td>
                   <td>
                     {s.score.min}–{s.score.max}
                   </td>

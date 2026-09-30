@@ -4,6 +4,7 @@
 import Base from '../../layouts/Base.astro';
 import PreviewQuestion from '../../components/questions/PreviewQuestion.tsx';
 import { getExams, renderPassage, renderQuestion, renderSourceSet } from '../../lib/content/index.ts';
+import { url } from '../../lib/url';
 
 export function getStaticPaths() {
   return import.meta.env.DEV ? [{ params: { slug: undefined } }] : [];
@@ -45,6 +46,15 @@ const exams = getExams().map((exam) => {
       <p>
         Every question with its answer and explanation, for reviewing content. This page exists only in
         <code>npm run dev</code>. Edit a file in <code>content/</code> and the page reloads.
+      </p>
+      <p>
+        {
+          exams.map(({ exam }) => (
+            <a class="btn" href={url(`/preview/${exam.id}/demo-mock/take/`)}>
+              Try the {exam.config.name} demo mock
+            </a>
+          ))
+        }
       </p>
     </header>
 

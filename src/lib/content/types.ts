@@ -75,6 +75,8 @@ export interface PayloadSection {
 
 export interface TestPayload {
   version: 1;
+  /** Changes when the test's structure or answer keys change; older saved attempts are then discarded. */
+  hash: string;
   exam: {
     id: string;
     name: string;

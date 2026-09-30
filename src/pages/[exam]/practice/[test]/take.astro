@@ -1,0 +1,34 @@
+---
+// The full-screen test player for a practice set. It runs entirely in the browser.
+import Base from '../../../../layouts/Base.astro';
+import TestPlayer from '../../../../components/player/TestPlayer.tsx';
+import { getExam, listExamIds } from '../../../../lib/content/index.ts';
+import { url } from '../../../../lib/url';
+
+export function getStaticPaths() {
+  return listExamIds().flatMap((exam) => getExam(exam).practice.map((test) => ({ params: { exam, test: test.id } })));
+}
+
+const { exam, test: id } = Astro.params;
+const test = getExam(exam).practice.find((t) => t.id === id)!;
+---
+
+<Base title={test.title} bare noindex>
+  <TestPlayer
+    client:only="react"
+    payloadUrl={url(`/data/${exam}/practice/${id}.json`)}
+    testKey={`${exam}/practice/${id}`}
+    exitUrl={url(`/${exam}/practice/${id}/`)}
+  >
+    <p slot="fallback" class="player-boot">Loading test…</p>
+  </TestPlayer>
+  <noscript><p class="player-boot">The test player needs JavaScript. Please enable it and reload.</p></noscript>
+</Base>
+
+<style is:global>
+  .player-boot {
+    margin: 20vh auto 0;
+    text-align: center;
+    color: var(--text-muted);
+  }
+</style>

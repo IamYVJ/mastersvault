@@ -10,6 +10,7 @@ content/gmat/
   sources/<id>.yaml               Multi-Source Reasoning tab sets
   tests/mocks/<id>.yaml           full-length mocks
   tests/practice/<id>.yaml        section practice sets
+  revision/<section>/<slug>.md    revision notes (revision/general/ for whole-exam notes)
 ```
 
 ## Ground rules
@@ -140,6 +141,31 @@ questions: [ps-0003, ps-0007, ...]
 ```
 
 **Building a mock:** mix difficulty roughly evenly across 2–4, with a few 1s and 5s. Spread topics, and put Reading Comprehension passages at varied points in the Verbal section. Run `npm run coverage` to find gaps and unused questions.
+
+## Revision notes
+
+A note is a Markdown file in `revision/<section>/` (or `revision/general/` for advice about the whole exam). The file name becomes the URL: `revision/quant/percents.md` is served at `/gmat/revision/quant/percents/`.
+
+```markdown
+---
+title: Percents
+summary: One sentence shown on the revision index and in search results.
+kind: topic                    # topic | formulas | strategy
+topics: [percents]             # topic ids from exam.yaml (required for kind: topic)
+questionTypes: []              # e.g. [data-sufficiency] for a strategy guide
+order: 10                      # position within the section, lowest first
+status: draft                  # draft | reviewed
+---
+
+## First heading
+
+Body in Markdown, with the same maths, money and YAML rules as questions.
+```
+
+- **Topics and question types link things together.** The revision index links each topic to its note, the dashboard's "Where to focus" table links weak topics to their notes, and each note lists the practice sets with matching questions.
+- Use `##` headings. Notes with three or more of them get an "On this page" contents list.
+- A `> **Tip:** …` blockquote renders as a highlighted callout.
+- `npm run coverage` shows which topics still have no note.
 
 ## Review checklist
 

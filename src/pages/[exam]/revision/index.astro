@@ -1,6 +1,8 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import { getExam, listExamIds } from '../../../lib/content/index.ts';
+import { GENERAL_NOTES, getExam, listExamIds } from '../../../lib/content/index.ts';
+import { KIND_LABELS, noteHref, notesByTopic, sortedNotes } from '../../../lib/content/revision.ts';
+import { url } from '../../../lib/url';
 
 export function getStaticPaths() {
   return listExamIds().map((exam) => ({ params: { exam } }));
@@ -8,57 +10,124 @@ export function getStaticPaths() {
 
 const exam = getExam(Astro.params.exam);
 const { config } = exam;
+const general = sortedNotes(exam, GENERAL_NOTES);
+const byTopic = notesByTopic(exam);
 const countFor = (sectionId: string, topicId: string) =>
   [...exam.questions.values()].filter((q) => q.section === sectionId && q.data.topics.includes(topicId)).length;
+const sections = config.sections.map((s) => {
+  const notes = sortedNotes(exam, s.id);
+  return {
+    section: s,
+    guides: notes.filter((n) => n.data.kind !== 'topic'),
+    topics: s.topics.map((t) => ({ ...t, note: byTopic.get(`${s.id}/${t.id}`), questions: countFor(s.id, t.id) })),
+  };
+});
 ---
 
-<Base title={`${config.name} revision`}>
+<Base title={`${config.name} revision`} description={`Revision notes, formula sheets and strategy guides for the ${config.name}.`}>
   <div class="container page">
     <header class="page-head">
       <p class="eyebrow">{config.name}</p>
       <h1>Revision</h1>
       <p>
-        Topic notes, formula sheets and strategy guides are being written. They'll be organised by the topics below,
-        which match how practice questions are tagged.
+        Short, focused notes for every part of the exam. Each topic lists how many practice questions cover it, and the
+        dashboard points you to the notes for the topics you're finding hardest.
       </p>
     </header>
 
-    <div class="grid">
-      {
-        config.sections.map((s) => (
-          <div class="card">
-            <h3>{s.name}</h3>
-            <ul class="topics">
-              {s.topics.map((t) => (
-                <li>
-                  <span>{t.name}</span>
-                  <span class="badge">{countFor(s.id, t.id)} Qs</span>
-                </li>
+    {
+      general.length > 0 && (
+        <div class="grid">
+          {general.map((n) => (
+            <a class="card note-card is-featured" href={url(noteHref(exam.id, n))}>
+              <span class="badge badge-accent">{KIND_LABELS[n.data.kind]}</span>
+              <h2>{n.data.title}</h2>
+              <p class="muted">{n.data.summary}</p>
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      sections.map(({ section, guides, topics }) => (
+        <section class="section">
+          <h2>{section.name}</h2>
+          {guides.length > 0 && (
+            <div class="grid guides">
+              {guides.map((n) => (
+                <a class="card note-card" href={url(noteHref(exam.id, n))}>
+                  <span class="badge">{KIND_LABELS[n.data.kind]}</span>
+                  <h3>{n.data.title}</h3>
+                  <p class="muted small">{n.data.summary}</p>
+                </a>
               ))}
-            </ul>
-          </div>
-        ))
-      }
-    </div>
+            </div>
+          )}
+          <ul class="topics">
+            {topics.map((t) => (
+              <li>
+                {t.note ? <a href={url(noteHref(exam.id, t.note))}>{t.name}</a> : <span>{t.name}</span>}
+                <span class="topic-meta">
+                  {!t.note && <span class="muted small">Notes coming soon</span>}
+                  <span class="badge">{t.questions} {t.questions === 1 ? 'question' : 'questions'}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
   </div>
 </Base>
 
 <style>
+  .note-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+  .note-card:hover {
+    border-color: var(--accent);
+    color: inherit;
+  }
+  .note-card h2,
+  .note-card h3 {
+    margin: 4px 0 0;
+    color: var(--accent-text);
+  }
+  .note-card h2 {
+    font-size: 1.2rem;
+  }
+  .guides {
+    margin-bottom: 16px;
+  }
   .topics {
     list-style: none;
     margin: 0;
     padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 0 24px;
   }
   .topics li {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
+    padding: 9px 0;
     border-bottom: 1px solid var(--border);
-    font-size: 0.95rem;
   }
-  .topics li:last-child {
-    border-bottom: 0;
+  .topics a {
+    font-weight: 600;
+  }
+  .topic-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 </style>

@@ -186,6 +186,23 @@ export const sourceSetSchema = z.object({
 });
 export type SourceSetData = z.infer<typeof sourceSetSchema>;
 
+// ------------------------------------------------------------- revision notes
+
+export const NOTE_KINDS = ['topic', 'formulas', 'strategy'] as const;
+
+export const noteSchema = z.object({
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  kind: z.enum(NOTE_KINDS).default('topic'),
+  /** Topic ids from the note's section that the note teaches. */
+  topics: z.array(slug).default([]),
+  /** Question types the note is about (for strategy notes). */
+  questionTypes: z.array(questionType).default([]),
+  order: z.number().int().default(100),
+  status: z.enum(['draft', 'reviewed']).default('draft'),
+});
+export type NoteData = z.infer<typeof noteSchema>;
+
 // ---------------------------------------------------------------------- tests
 
 export const mockSchema = z.object({

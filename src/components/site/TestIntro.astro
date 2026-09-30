@@ -11,7 +11,10 @@ const { exam, test } = Astro.props;
 const { config } = exam;
 const rows = test.sections.map((s) => ({ ...s, config: config.sections.find((c) => c.id === s.id)! }));
 const minutes = rows.reduce((n, s) => n + s.timeMinutes, 0);
-const listHref = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}/`);
+const kindPath = test.kind === 'mock' ? 'mocks' : 'practice';
+const listHref = url(`/${exam.id}/${kindPath}/`);
+const takeHref = url(`/${exam.id}/${kindPath}/${test.id}/take/`);
+const testKey = `${exam.id}/${kindPath}/${test.id}`;
 ---
 
 <div class="container page">
@@ -29,7 +32,7 @@ const listHref = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}
           <th scope="col">Section</th>
           <th scope="col" class="num">Questions</th>
           <th scope="col" class="num">Time</th>
-          <th scope="col">Tools</th>
+          <th scope="col">On-screen tools</th>
         </tr>
       </thead>
       <tbody>
@@ -39,7 +42,7 @@ const listHref = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}
               <td>{s.config.name}</td>
               <td class="num">{s.questions.length}</td>
               <td class="num">{s.timeMinutes} min</td>
-              <td>{s.config.tools.length ? s.config.tools.join(', ') : '—'}</td>
+              <td>{s.config.tools.length ? s.config.tools.map((x) => x[0].toUpperCase() + x.slice(1)).join(', ') : 'None'}</td>
             </tr>
           ))
         }
@@ -47,9 +50,16 @@ const listHref = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}
     </table>
   </div>
 
-  <div class="start">
-    <button class="btn btn-primary" type="button" disabled>Start ({minutes} min)</button>
-    <p class="muted small">The test screen is under construction and will be switched on in the next update.</p>
+  <div class="start" data-test-key={testKey} data-take={takeHref}>
+    <a class="btn btn-primary" href={takeHref} data-role="primary">Start ({minutes} min)</a>
+    <a class="btn" href={`${takeHref}?new`} data-role="restart" hidden>Start over</a>
+    <p class="muted small" data-role="status">
+      {
+        test.kind === 'mock'
+          ? 'Opens the full-screen test. Set aside the full time and take it in one sitting.'
+          : 'Opens the full-screen test. You can choose timed or untimed on the next screen.'
+      }
+    </p>
   </div>
 </div>
 
@@ -64,4 +74,37 @@ const listHref = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}
   .start p {
     margin: 0;
   }
+  .start p[data-role='status'] {
+    flex-basis: 100%;
+  }
 </style>
+
+<script>
+  // Offer to resume an unfinished attempt (or reopen the last results) saved in this browser.
+  for (const box of document.querySelectorAll<HTMLElement>('.start[data-test-key]')) {
+    let saved: { phase?: string; createdAt?: number; finishedAt?: number | null } | null = null;
+    try {
+      saved = JSON.parse(localStorage.getItem(`mv:attempt:${box.dataset.testKey}`) ?? 'null');
+    } catch {
+      saved = null;
+    }
+    if (!saved?.phase || saved.phase === 'setup') continue;
+    const primary = box.querySelector<HTMLAnchorElement>('[data-role="primary"]')!;
+    const restart = box.querySelector<HTMLAnchorElement>('[data-role="restart"]')!;
+    const status = box.querySelector<HTMLElement>('[data-role="status"]')!;
+    const when = (t?: number | null) =>
+      t ? new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'earlier';
+    restart.hidden = false;
+    if (saved.phase === 'results') {
+      primary.textContent = 'View last results';
+      restart.textContent = 'Take it again';
+      status.textContent = `You finished this test on ${when(saved.finishedAt)}.`;
+    } else {
+      primary.textContent = 'Resume';
+      status.textContent = `You have an unfinished attempt from ${when(saved.createdAt)}. The timer was paused when you left.`;
+      restart.addEventListener('click', (e) => {
+        if (!confirm('Discard your unfinished attempt and start again?')) e.preventDefault();
+      });
+    }
+  }
+</script>

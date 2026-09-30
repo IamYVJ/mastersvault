@@ -1,7 +1,7 @@
 ---
-import Base from '../../../layouts/Base.astro';
-import TestIntro from '../../../components/site/TestIntro.astro';
-import { getExam, listExamIds } from '../../../lib/content/index.ts';
+import Base from '../../../../layouts/Base.astro';
+import TestIntro from '../../../../components/site/TestIntro.astro';
+import { getExam, listExamIds } from '../../../../lib/content/index.ts';
 
 export function getStaticPaths() {
   return listExamIds().flatMap((exam) =>

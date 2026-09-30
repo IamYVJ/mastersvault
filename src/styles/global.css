@@ -21,10 +21,14 @@
   --danger-soft: #fdeceb;
   --warning: #955405;
   --warning-soft: #fcf0da;
-  --series-1: #0f6e5c;
+  /* Categorical chart colours, in fixed order (validated with the dataviz palette checks). */
+  --series-1: #00816a;
   --series-2: #d17a22;
   --series-3: #4f62d6;
   --series-4: #b83b72;
+  /* Emphasis charts: context bars and the flagged state (validated with the dataviz palette checks). */
+  --chart-muted: #9c9a94;
+  --chart-warn: #c46a0a;
   --shadow: 0 1px 2px rgb(20 20 15 / 0.06), 0 2px 8px rgb(20 20 15 / 0.05);
   --radius: 10px;
   --radius-sm: 6px;
@@ -57,10 +61,12 @@
     --danger-soft: #3a1d1b;
     --warning: #e0a44a;
     --warning-soft: #3a2c14;
-    --series-1: #3fb89c;
-    --series-2: #f0a050;
-    --series-3: #8b9bf5;
-    --series-4: #e77aa8;
+    --series-1: #259e80;
+    --series-2: #c97b30;
+    --series-3: #7083e6;
+    --series-4: #c95a8c;
+    --chart-muted: #727780;
+    --chart-warn: #c4832f;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 8px rgb(0 0 0 / 0.25);
   }
 }
@@ -87,10 +93,12 @@
   --danger-soft: #3a1d1b;
   --warning: #e0a44a;
   --warning-soft: #3a2c14;
-  --series-1: #3fb89c;
-  --series-2: #f0a050;
-  --series-3: #8b9bf5;
-  --series-4: #e77aa8;
+  --series-1: #259e80;
+  --series-2: #c97b30;
+  --series-3: #7083e6;
+  --series-4: #c95a8c;
+  --chart-muted: #727780;
+  --chart-warn: #c4832f;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 8px rgb(0 0 0 / 0.25);
 }
 
@@ -105,6 +113,10 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 html {
