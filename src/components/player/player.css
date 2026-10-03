@@ -72,6 +72,13 @@
 .player-bottom .player-actions:last-child {
   justify-content: flex-end;
 }
+/* A long test title is truncated rather than pushing the tools onto a second row. */
+.player-top .player-heading {
+  flex: 1 1 auto;
+}
+.player-top .player-status {
+  flex: none;
+}
 
 .player-timer {
   display: inline-flex;
@@ -643,6 +650,9 @@
   }
   .player-top {
     flex-wrap: wrap;
+  }
+  .player-top .player-status {
+    flex: 0 1 auto;
   }
   .player-bar-btn span {
     display: none;

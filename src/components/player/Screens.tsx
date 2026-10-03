@@ -191,7 +191,13 @@ export function OrderScreen({ payload, attempt, act, requestExit }: PlayerProps)
           <legend className="visually-hidden">Section order</legend>
           {orders.map((order, i) => (
             <label key={order.join()} className={`player-option ${choice === i ? 'is-on' : ''}`}>
-              <input type="radio" name="order" checked={choice === i} onChange={() => setChoice(i)} />
+              <input
+                type="radio"
+                name="order"
+                aria-label={order.map(name).join(', then ')}
+                checked={choice === i}
+                onChange={() => setChoice(i)}
+              />
               <span className="player-order">
                 {order.map((id, j) => (
                   <span key={id}>

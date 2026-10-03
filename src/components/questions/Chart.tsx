@@ -1,13 +1,14 @@
 // SVG bar, line and scatter charts drawn from the chart spec in question files.
 // There are deliberately no data labels: reading values off the chart is part of the task.
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Chart as ChartSpec } from '../../lib/content/schema.ts';
 
-const W = 640;
-const H = 340;
+// The drawing is sized to its container (within limits) so that text stays the same size in a narrow
+// multi-source tab or on a phone instead of shrinking with the whole chart.
+const DEFAULT_W = 640;
+const MIN_W = 360;
+const MAX_W = 960;
 const M = { top: 14, right: 16, bottom: 54, left: 62 };
-const PW = W - M.left - M.right;
-const PH = H - M.top - M.bottom;
 const SERIES = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)'];
 const MARKERS = ['circle', 'square', 'diamond', 'triangle'] as const;
 
@@ -50,6 +51,22 @@ function Marker({ kind, x, y, color }: { kind: (typeof MARKERS)[number]; x: numb
 }
 
 export default function Chart({ chart }: { chart: ChartSpec }) {
+  const ref = useRef<HTMLElement>(null);
+  const [W, setW] = useState(DEFAULT_W);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.round(entry.contentRect.width);
+      if (width > 0) setW(Math.min(MAX_W, Math.max(MIN_W, width)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const H = Math.round(Math.min(340, Math.max(260, W * 0.55)));
+  const PW = W - M.left - M.right;
+  const PH = H - M.top - M.bottom;
+
   const multi = chart.series.length > 1;
   const yValues = chart.kind === 'scatter' ? chart.series.flatMap((s) => s.points.map((p) => p[1])) : chart.series.flatMap((s) => s.values);
   const y = scale(yValues, chart.y, chart.kind !== 'scatter');
@@ -120,7 +137,7 @@ export default function Chart({ chart }: { chart: ChartSpec }) {
   const label = `${chart.title ?? 'Chart'}${chart.kind === 'scatter' ? '' : `: ${chart.categories.join(', ')}`}`;
 
   return (
-    <figure className="q-chart">
+    <figure className="q-chart" ref={ref}>
       {chart.title && <figcaption className="q-chart-title">{chart.title}</figcaption>}
       {multi && (
         <ul className="q-legend">

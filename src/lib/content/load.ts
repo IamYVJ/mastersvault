@@ -320,7 +320,7 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
     });
   }
 
-  const practice: TestDef[] = [];
+  const practice: (TestDef & { order: number })[] = [];
   for (const { id, file } of list(path.join('tests', 'practice'), /\.ya?ml$/)) {
     const raw = tryRead(file, parseYaml);
     if (raw === null) continue;
@@ -340,8 +340,10 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
       title: data.title,
       description: data.description,
       sections: [{ id: section.id, questions: data.questions, timeMinutes: data.timeMinutes ?? paced }],
+      order: data.order,
     });
   }
+  practice.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 
   // A question should appear in at most one mock, and mocks should stay unseen.
   const usedIn = new Map<string, TestDef[]>();
@@ -420,5 +422,5 @@ function checkQuestion(q: QuestionData, report: (m: string) => void) {
 
 /** Parses a table cell as a number, allowing thousands separators ("1,890"). */
 export function toNumber(cell: string | number): number {
-  return typeof cell === 'number' ? cell : Number(cell.replace(/,/g, '').trim());
+  return typeof cell === 'number' ? cell : Number(cell.replace(/,/g, '').replace(/−/g, '-').trim());
 }

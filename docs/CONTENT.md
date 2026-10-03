@@ -131,12 +131,13 @@ sections:
 
 A question may appear in only one mock. Reusing a mock question in a practice set produces a warning, because the test taker will have seen it.
 
-**Practice set** (`tests/practice/quant-algebra-01.yaml`): one section, any number of questions. `timeMinutes` is optional and defaults to the section's pace (for example, 45 min / 21 questions).
+**Practice set** (`tests/practice/quant-algebra-01.yaml`): one section, any number of questions. `timeMinutes` is optional and defaults to the section's pace (for example, 45 min / 21 questions). `order` sets the position in the section's list (lowest first, default 100).
 
 ```yaml
 title: Algebra set 1
 section: quant
 timeMinutes: 20
+order: 2
 questions: [ps-0003, ps-0007, ...]
 ```
 

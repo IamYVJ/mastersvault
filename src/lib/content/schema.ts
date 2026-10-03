@@ -216,5 +216,6 @@ export const practiceSchema = z.object({
   description: z.string().optional(),
   section: slug,
   timeMinutes: z.number().int().positive().optional(),
+  order: z.number().int().default(100), // position within the section's list, lowest first
   questions: z.array(slug).min(1),
 });
