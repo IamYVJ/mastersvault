@@ -29,6 +29,8 @@ jobs:
       - run: npm ci
       - name: Validate content
         run: npm run validate
+      - name: Check answer keys
+        run: npm run verify
       - name: Unit tests
         run: npm test
       - name: Type check

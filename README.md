@@ -18,6 +18,7 @@ npm run dev          # http://localhost:4321/mastersvault/
 | `npm run dev` | Dev server. Dev-only extras: the question bank preview at `/mastersvault/preview/` and a demo mock at `/mastersvault/preview/gmat/demo-mock/take/`. |
 | `npm run validate` | Checks all content: schemas, references, mock composition, math rendering. |
 | `npm run coverage` | Question counts by section, type, difficulty and topic, plus unused questions. |
+| `npm run verify` | Recomputes every computable answer by brute force and compares it with the answer key. |
 | `npm test` | Unit tests (test engine, calculator, scoring, grading, content loader, validation rules). |
 | `npm run test:e2e` | Builds the site and runs the Playwright browser tests. Run `npx playwright install chromium` once first, or set `PW_CHANNEL=chrome` (or `msedge`) to use a browser you already have. |
 | `npm run check` | TypeScript and Astro type check. |
@@ -32,7 +33,8 @@ src/lib/engine/          Test engine: attempt state machine, grading, results, b
 src/components/questions React views for all eight question formats
 src/components/player    Full-screen test player (screens, status bars, dialogs)
 src/pages/               Site pages. /data/<exam>/<kind>/<test>.json holds compiled test payloads.
-scripts/                 validate-content.ts, coverage.ts (run directly by Node)
+scripts/                 validate-content.ts, coverage.ts, verify-answers.mjs (run directly by Node)
+scripts/verify/          one answer-check script per mock or group of practice sets
 docs/                    Content authoring guide and roadmap
 ```
 

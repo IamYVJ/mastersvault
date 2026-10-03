@@ -52,10 +52,35 @@ Decisions (September 2026):
 - [x] 11 notes: test-day strategy, Quant formula sheet, percents, number properties, rates and work, statistics, CR and RC strategy, Data Sufficiency, tables/graphs/sources, Two-Part Analysis (drafts, awaiting review)
 - [x] Note pages with contents, topic tags, related practice sets and previous/next links; the revision index shows which topics have notes
 
-## Phase 5: Content build-out
-- [ ] Launch: 2 full mocks (128 questions) + 3 practice sets per section (~180 questions), all reviewed
-- [ ] Then 5–6 mocks
+## Phase 5: Content build-out (in progress)
+- [x] Mock 1 drafted: 64 original questions
+  - Quant: 21 PS covering all 14 topics
+  - Verbal: 10 CR covering every question type, plus 13 RC on 4 new passages
+  - Data Insights: 7 DS, 1 MSR set of 3, 3 TA, 3 GI, 4 TPA
+  - Every computable answer was re-derived by an independent brute-force script
+- [x] Mock 2 drafted: 64 more original questions
+  - Same structure as Mock 1, with new scenarios and 4 new passages (population ecology, congestion pricing, shipping containers, serialized novels)
+  - All computable answers verified the same way, and the DS checker also confirms no two statements contradict each other
+- [ ] Review Mocks 1 and 2 and mark their questions `reviewed`
+- [x] 3 practice sets per section: 126 more original questions, none of them in a mock or in another set
+  - Quant: arithmetic and number properties, algebra, and word problems/statistics/probability (15 each, easier to harder)
+  - Verbal: two critical reasoning sets (15 each, covering all 8 question types) and a reading comprehension set (4 new passages, 14 questions)
+  - Data Insights: data sufficiency (15), tables and graphs (5 tables, 5 graphs), and multi-source plus two-part (2 new source sets, one with a chart tab, and 6 two-part questions)
+  - Every computable answer was checked by brute-force scripts, including all 15 DS keys
+  - Practice sets have an `order` field, and the samplers are listed first
+- [ ] Review the practice sets and mark their questions `reviewed`
+- [x] Mocks 3 and 4 drafted: 128 more original questions
+  - Same structure, difficulty mix and answer-letter balance as Mocks 1 and 2
+  - 8 new passages: plate tectonics, airline overbooking, the Hawthorne effect, tempera and oil paint, coral bleaching, too many choices, Carnegie libraries, sign languages
+  - 2 new multi-source sets: solar panels for a school district, and a customer-service training plan
+  - All computable answers verified. The checks caught two Data Sufficiency questions whose statements contradicted each other, and both were fixed
+- [ ] Review Mocks 3 and 4 and mark their questions `reviewed`
+- [ ] Notes for the remaining topics (linear equations, inequalities, functions and sequences, most Data Insights topics)
+- [ ] Then 5–6 mocks (4 drafted)
 
 ## Phase 6: Polish
+- [x] Charts are drawn at their container's width, so labels stay readable in narrow multi-source tabs and on phones
+- [x] Long test titles are truncated in the player's top bar instead of pushing the tools onto a second row
+- [x] Table cells with a typographic minus (−2) sort as numbers
 - [ ] Accessibility pass (keyboard-only run of a full mock, screen-reader labels)
 - [ ] SEO, social cards, optional offline mode

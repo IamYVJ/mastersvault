@@ -23,6 +23,20 @@ describe('real content', () => {
     expect(quant.questions['ps-0001'].response).toMatchObject({ kind: 'choice', answer: 0 });
     expect(quant.sections[0].timeMinutes).toBe(11); // 5 questions at the section's 45/21 pace, rounded up
   });
+
+  it('lists practice sets by order, samplers first', () => {
+    const exam = getExam('gmat');
+    const quant = exam.practice.filter((t) => t.sections[0].id === 'quant').map((t) => t.id);
+    expect(quant).toEqual(['quant-sampler', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems']);
+  });
+
+  it('keeps practice sets free of mock questions and of each other', () => {
+    const exam = getExam('gmat');
+    const inMocks = new Set(exam.mocks.flatMap((t) => t.sections.flatMap((s) => s.questions)));
+    const practice = exam.practice.flatMap((t) => t.sections.flatMap((s) => s.questions));
+    expect(practice.filter((q) => inMocks.has(q))).toEqual([]);
+    expect(new Set(practice).size).toBe(practice.length);
+  });
 });
 
 describe('yaml', () => {
