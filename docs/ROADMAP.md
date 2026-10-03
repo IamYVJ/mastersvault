@@ -75,7 +75,11 @@ Decisions (September 2026):
   - 2 new multi-source sets: solar panels for a school district, and a customer-service training plan
   - All computable answers verified. The checks caught two Data Sufficiency questions whose statements contradicted each other, and both were fixed
 - [ ] Review Mocks 3 and 4 and mark their questions `reviewed`
-- [ ] Notes for the remaining topics (linear equations, inequalities, functions and sequences, most Data Insights topics)
+- [x] Notes for the remaining topics, so every topic now has a note (19 notes in all)
+  - Quant: linear equations, inequalities and absolute value, functions and sequences
+  - Data Insights: percents and ratios with data, statistics in tables and charts, rates and growth, number properties in Data Sufficiency, business math
+  - Worked examples in notes are new, so they don't give away test questions
+- [x] Answer-check scripts moved into the repo (`npm run verify`, also run in CI)
 - [ ] Then 5–6 mocks (4 drafted)
 
 ## Phase 6: Polish
