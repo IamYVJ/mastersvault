@@ -18,7 +18,7 @@ test('a practice set can be taken from start to results', async ({ page }) => {
   // Answer keys for ps-0001 … ps-0005 (A, C, D, E, C).
   const answers = [0, 2, 3, 4, 2];
   for (const [i, answer] of answers.entries()) {
-    await expect(page.getByText(`Question ${i + 1} of 5`)).toBeVisible();
+    await expect(page.getByRole('heading', { name: `Question ${i + 1} of 5`, exact: true })).toBeVisible();
     await choice(page, answer).check();
     if (i < answers.length - 1) await next(page).click();
   }
@@ -44,7 +44,7 @@ test('an unfinished attempt resumes where it left off, with the timer paused', a
   await start(page, 'verbal-sampler');
   await choice(page, 3).check();
   await next(page).click();
-  await expect(page.getByText('Question 2 of 6')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Question 2 of 6', exact: true })).toBeVisible();
 
   await page.reload();
   const dialog = page.getByRole('dialog', { name: 'Welcome back' });
@@ -55,7 +55,7 @@ test('an unfinished attempt resumes where it left off, with the timer paused', a
   await expect(timer).toHaveText(paused!);
   await dialog.getByRole('button', { name: 'Continue' }).click();
 
-  await expect(page.getByText('Question 2 of 6')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Question 2 of 6', exact: true })).toBeVisible();
   await expect(timer).not.toHaveText(paused!, { timeout: 5000 });
   await page.getByRole('button', { name: 'All questions' }).click();
   await expect(page.locator('.player-review-table tbody tr').first()).toContainText('Answered');
@@ -94,7 +94,7 @@ test('Data Insights has a working calculator and whiteboard', async ({ page }) =
   await expect(board).toBeHidden();
   await choice(page, 2).check();
   await next(page).click();
-  await expect(page.getByText('Question 2 of 7')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Question 2 of 7', exact: true })).toBeVisible();
   await expect(calc.locator('.calc-value')).toHaveText('8760');
   await page.getByRole('button', { name: 'Whiteboard' }).click();
   await expect(board.getByRole('button', { name: 'Undo' })).toBeEnabled();

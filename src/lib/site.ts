@@ -2,6 +2,8 @@
 export const SITE = {
   name: 'MastersVault',
   tagline: 'Free, exam-realistic practice for graduate admissions tests',
+  description:
+    'Free, original practice for the GMAT: full-length mock tests, section practice sets and revision notes, on a test screen that works like the real exam. Unofficial and not affiliated with GMAC.',
   repo: 'https://github.com/IamYVJ/mastersvault',
   contentLicense: { name: 'CC BY-NC-SA 4.0', url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' },
   codeLicense: { name: 'AGPL-3.0', url: 'https://www.gnu.org/licenses/agpl-3.0.html' },

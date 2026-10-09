@@ -61,6 +61,7 @@ export function SetupScreen({ payload, rules, act, requestExit, exitLabel }: Pla
   return (
     <Shell
       title={payload.test.title}
+      screen="Set up"
       footerLeft={<ExitButton requestExit={requestExit} label={exitLabel} />}
       footerRight={
         <button type="button" className="player-primary" onClick={() => act({ type: 'start', settings })}>
@@ -177,6 +178,7 @@ export function OrderScreen({ payload, attempt, act, requestExit }: PlayerProps)
   return (
     <Shell
       title={payload.test.title}
+      screen="Section order"
       footerLeft={<ExitButton requestExit={requestExit} />}
       footerRight={
         <button type="button" className="player-primary" onClick={() => act({ type: 'choose-order', order: orders[choice] })}>
@@ -225,6 +227,7 @@ export function SectionIntroScreen({ payload, attempt, rules, act, requestExit }
     <Shell
       title={payload.test.title}
       subtitle={multi ? `Section ${attempt.current + 1} of ${attempt.order.length}` : undefined}
+      screen={`${meta.name} instructions`}
       footerLeft={<ExitButton requestExit={requestExit} />}
       footerRight={
         <button type="button" className="player-primary" onClick={() => act({ type: 'begin-section' })}>
@@ -295,6 +298,7 @@ export function BreakOfferScreen({ payload, attempt, rules, act, requestExit }: 
   return (
     <Shell
       title={payload.test.title}
+      screen="Optional break"
       footerLeft={<ExitButton requestExit={requestExit} />}
       footerRight={
         <>
@@ -331,6 +335,7 @@ export function BreakScreen({ payload, attempt, act, requestExit }: PlayerProps)
     <Shell
       title={payload.test.title}
       subtitle="Break"
+      screen="Break"
       timer={{ ms: left, countdown: true, label: 'Break time remaining' }}
       footerLeft={<ExitButton requestExit={requestExit} />}
       footerRight={

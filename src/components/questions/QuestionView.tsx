@@ -65,7 +65,7 @@ export default function QuestionView({
       {answer}
       {reveal && (
         <section className="q-explanation">
-          <h3>Explanation</h3>
+          <h2>Explanation</h2>
           <div className="q-prose" dangerouslySetInnerHTML={{ __html: q.explanation }} />
           {explanationFooter}
         </section>
@@ -76,7 +76,8 @@ export default function QuestionView({
   if (stimulus?.kind === 'passage' || stimulus?.kind === 'sources') {
     return (
       <div className="q-view q-split">
-        <div className="q-stimulus">
+        {/* Scrolls on its own, so it must be reachable by keyboard. */}
+        <div className="q-stimulus" tabIndex={0} role="region" aria-label={stimulus.kind === 'passage' ? 'Passage' : 'Sources'}>
           {stimulus.kind === 'passage' && passage && (
             <article className="q-passage q-prose">
               <div dangerouslySetInnerHTML={{ __html: passage.html }} />

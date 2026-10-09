@@ -52,6 +52,12 @@ export const CrossIcon = () => (
   </svg>
 );
 
+export const MoveIcon = () => (
+  <svg {...base}>
+    <path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" />
+  </svg>
+);
+
 export const ListIcon = () => (
   <svg {...base}>
     <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />

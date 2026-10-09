@@ -2,6 +2,7 @@
 import Base from '../../../../layouts/Base.astro';
 import TestIntro from '../../../../components/site/TestIntro.astro';
 import { getExam, listExamIds } from '../../../../lib/content/index.ts';
+import { breadcrumbData, learningResourceData } from '../../../../lib/seo.ts';
 
 export function getStaticPaths() {
   return listExamIds().flatMap((exam) =>
@@ -11,8 +12,21 @@ export function getStaticPaths() {
 
 const exam = getExam(Astro.params.exam);
 const test = exam.practice.find((t) => t.id === Astro.params.test)!;
+const section = exam.config.sections.find((s) => s.id === test.sections[0].id)!;
+const path = `/${exam.id}/practice/${test.id}/`;
+const count = test.sections[0].questions.length;
+const minutes = test.sections[0].timeMinutes;
+const description = `${test.description ?? test.title} A free ${exam.config.name} ${section.name} practice set: ${count} original questions, about ${minutes} minutes, with explanations. Unofficial.`;
+const jsonLd = [
+  learningResourceData(Astro.site, { name: `${test.title}: ${exam.config.name} ${section.name} practice`, description, path, type: 'Practice test', about: `${exam.config.name} ${section.name}`, minutes }),
+  breadcrumbData(Astro.site, [
+    { name: exam.config.name, path: `/${exam.id}/` },
+    { name: 'Section practice', path: `/${exam.id}/practice/` },
+    { name: test.title, path },
+  ]),
+];
 ---
 
-<Base title={test.title} description={test.description}>
+<Base title={`${test.title}: ${exam.config.name} ${section.shortName} practice`} description={description} jsonLd={jsonLd}>
   <TestIntro exam={exam} test={test} />
 </Base>

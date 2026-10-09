@@ -1,6 +1,7 @@
-// A non-modal panel that floats over the test and can be dragged by its title bar.
-import { useEffect, useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react';
-import { CrossIcon } from './icons.tsx';
+// A non-modal panel that floats over the test. It can be dragged by its title bar, or moved with the
+// arrow keys from the move button. Escape closes it and returns focus to where it was opened from.
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react';
+import { CrossIcon, MoveIcon } from './icons.tsx';
 
 // Remember where each panel was left while the page is open.
 const positions = new Map<string, { x: number; y: number }>();
@@ -24,6 +25,8 @@ export default function FloatingPanel({ id, title, hidden, onClose, width, side 
   const [pos, setPos] = useState<{ x: number; y: number } | null>(() => positions.get(id) ?? null);
   const defaultPos = () => ({ x: side === 'right' ? Math.max(16, window.innerWidth - width - 24) : 24, y: 76 });
   const drag = useRef<{ dx: number; dy: number } | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const wasOpen = useRef(false);
 
   const keepInView = (p: { x: number; y: number }) => {
     const el = ref.current;
@@ -46,10 +49,25 @@ export default function FloatingPanel({ id, title, hidden, onClose, width, side 
 
   useEffect(() => {
     if (!hidden) {
+      opener.current = document.activeElement as HTMLElement | null;
+      wasOpen.current = true;
       setPos((p) => keepInView(p ?? defaultPos()));
       ref.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    } else if (wasOpen.current) {
+      wasOpen.current = false;
+      // Hiding the panel would otherwise drop focus back to the top of the page.
+      const active = document.activeElement;
+      if (!active || active === document.body || ref.current?.contains(active)) opener.current?.focus?.();
     }
   }, [hidden]);
+
+  const onMoveKey = (e: KeyboardEvent) => {
+    const step = e.shiftKey ? 96 : 24;
+    const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+    if (!delta || !pos) return;
+    e.preventDefault();
+    setPos(keepInView({ x: pos.x + delta[0], y: pos.y + delta[1] }));
+  };
 
   const onPointerDown = (e: ReactPointerEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -72,10 +90,21 @@ export default function FloatingPanel({ id, title, hidden, onClose, width, side 
       aria-label={title}
       hidden={hidden}
       style={{ left: pos?.x ?? 0, top: pos?.y ?? 0, width: `min(${width}px, calc(100vw - 16px))` }}
-      onKeyDown={(e) => e.key === 'Escape' && e.target === e.currentTarget && onClose()}
+      // A tool inside may use Escape itself (the calculator clears with it) and marks the event handled.
+      onKeyDown={(e) => e.key === 'Escape' && !e.defaultPrevented && onClose()}
     >
       <div className="floating-panel-bar" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}>
         <span>{title}</span>
+        <span className="floating-panel-spacer" />
+        <button
+          type="button"
+          className="floating-panel-close floating-panel-move"
+          aria-label={`Move ${title.toLowerCase()}: use the arrow keys`}
+          title="Move with the arrow keys, or drag the title bar"
+          onKeyDown={onMoveKey}
+        >
+          <MoveIcon />
+        </button>
         <button type="button" className="floating-panel-close" onClick={onClose} aria-label={`Close ${title.toLowerCase()}`}>
           <CrossIcon />
         </button>

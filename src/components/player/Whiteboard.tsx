@@ -1,5 +1,5 @@
-// A simple scratch whiteboard: pen, eraser, undo and clear.
-// Strokes are kept in memory for the current section only.
+// A simple scratch whiteboard: pen, eraser, undo and clear, plus a typed-notes mode for anyone who
+// can't or doesn't want to draw with a pointer. Contents are kept in memory for the current section only.
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 type Tool = 'pen' | 'eraser';
@@ -16,6 +16,16 @@ export default function Whiteboard() {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [tool, setTool] = useState<Tool>('pen');
   const [size, setSize] = useState(2);
+  const [mode, setMode] = useState<'draw' | 'type'>('draw');
+  const [notes, setNotes] = useState('');
+  const typing = mode === 'type';
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+  const firstRender = useRef(true);
+  // Choosing Type puts the cursor straight into the notes.
+  useEffect(() => {
+    if (firstRender.current) firstRender.current = false;
+    else if (typing) notesRef.current?.focus();
+  }, [typing]);
   const current = useRef<Stroke | null>(null);
 
   const paint = useCallback((ctx: CanvasRenderingContext2D, s: Stroke) => {
@@ -98,33 +108,65 @@ export default function Whiteboard() {
   return (
     <div className="board">
       <div className="board-tools" role="toolbar" aria-label="Whiteboard tools">
-        <button type="button" aria-pressed={tool === 'pen'} onClick={() => setTool('pen')} data-autofocus>
+        <button
+          type="button"
+          aria-pressed={!typing && tool === 'pen'}
+          onClick={() => {
+            setMode('draw');
+            setTool('pen');
+          }}
+          data-autofocus
+        >
           Pen
         </button>
-        <button type="button" aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')}>
+        <button
+          type="button"
+          aria-pressed={!typing && tool === 'eraser'}
+          onClick={() => {
+            setMode('draw');
+            setTool('eraser');
+          }}
+        >
           Eraser
+        </button>
+        <button type="button" aria-pressed={typing} onClick={() => setMode(typing ? 'draw' : 'type')}>
+          Type
         </button>
         <label>
           <span className="visually-hidden">Line width</span>
-          <select value={size} onChange={(e) => setSize(Number(e.target.value))}>
+          <select value={size} disabled={typing} onChange={(e) => setSize(Number(e.target.value))}>
             <option value={1.5}>Fine</option>
             <option value={2.5}>Medium</option>
             <option value={4}>Thick</option>
           </select>
         </label>
         <span className="board-spacer" />
-        <button type="button" onClick={() => setStrokes((list) => list.slice(0, -1))} disabled={!strokes.length}>
+        <button type="button" onClick={() => setStrokes((list) => list.slice(0, -1))} disabled={typing || !strokes.length}>
           Undo
         </button>
-        <button type="button" onClick={() => setStrokes([])} disabled={!strokes.length}>
+        <button type="button" onClick={() => (typing ? setNotes('') : setStrokes([]))} disabled={typing ? !notes : !strokes.length}>
           Clear
         </button>
       </div>
+      {/* Both stay mounted so that switching modes keeps the drawing and the notes. */}
+      <textarea
+        className="board-notes"
+        style={{ height: HEIGHT }}
+        hidden={!typing}
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        aria-label="Typed notes"
+        placeholder="Type your working here"
+        spellCheck={false}
+        ref={notesRef}
+      />
       <canvas
         ref={canvas}
         className="board-canvas"
         style={{ height: HEIGHT }}
-        aria-label="Whiteboard drawing area"
+        hidden={typing}
+        role="img"
+        aria-label="Whiteboard drawing area. To take notes with the keyboard, choose Type."
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}

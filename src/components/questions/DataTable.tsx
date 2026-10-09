@@ -35,7 +35,7 @@ export default function DataTable({ table, id }: { table: RenderedTable; id: str
           ))}
         </select>
       </div>
-      <div className="q-table-scroll">
+      <div className="q-table-scroll" tabIndex={0} role="region" aria-label={table.caption ?? 'Data table'}>
         <table>
           {table.caption && <caption>{table.caption}</caption>}
           <thead>

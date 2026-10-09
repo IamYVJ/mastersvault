@@ -2,6 +2,7 @@
 import Base from '../../../../layouts/Base.astro';
 import TestIntro from '../../../../components/site/TestIntro.astro';
 import { getExam, listExamIds } from '../../../../lib/content/index.ts';
+import { breadcrumbData, learningResourceData } from '../../../../lib/seo.ts';
 
 export function getStaticPaths() {
   return listExamIds().flatMap((exam) =>
@@ -11,8 +12,21 @@ export function getStaticPaths() {
 
 const exam = getExam(Astro.params.exam);
 const test = exam.mocks.find((t) => t.id === Astro.params.test)!;
+const name = `${exam.config.name} ${test.title}`;
+const path = `/${exam.id}/mocks/${test.id}/`;
+const questions = test.sections.reduce((n, s) => n + s.questions.length, 0);
+const minutes = test.sections.reduce((n, s) => n + s.timeMinutes, 0);
+const description = `A free, full-length ${exam.config.name} practice test: ${questions} original questions in ${minutes} minutes, with the exam's timing and rules, a score estimate and full explanations. Unofficial.`;
+const jsonLd = [
+  learningResourceData(Astro.site, { name, description, path, type: 'Practice test', about: exam.config.name, minutes }),
+  breadcrumbData(Astro.site, [
+    { name: exam.config.name, path: `/${exam.id}/` },
+    { name: 'Mock tests', path: `/${exam.id}/mocks/` },
+    { name: test.title, path },
+  ]),
+];
 ---
 
-<Base title={test.title} description={test.description}>
+<Base title={`${name}: free full-length practice test`} description={description} jsonLd={jsonLd}>
   <TestIntro exam={exam} test={test} />
 </Base>

@@ -1,9 +1,8 @@
 // Names and links the browser-side dashboard needs, built at compile time.
 import { getExams } from './index.ts';
-import { DEMO_MOCK_ID } from './demo.ts';
 import { noteHref, notesByTopic } from './revision.ts';
 
-export function buildCatalog(url: (path: string) => string, dev: boolean) {
+export function buildCatalog(url: (path: string) => string) {
   const tests: Record<string, { title: string; href?: string; dataUrl: string }> = {};
   const topics: Record<string, { name: string; section: string; noteHref?: string }> = {};
   const sections: { id: string; name: string; shortName: string }[] = [];
@@ -20,7 +19,6 @@ export function buildCatalog(url: (path: string) => string, dev: boolean) {
           dataUrl: url(`/data/${exam.id}/${kind}/${t.id}.json`),
         };
     }
-    if (dev) tests[`${exam.id}/preview/${DEMO_MOCK_ID}`] = { title: 'Demo mock', dataUrl: url(`/preview/${exam.id}/demo-mock.json`) };
 
     const notes = notesByTopic(exam);
     for (const s of exam.config.sections) {

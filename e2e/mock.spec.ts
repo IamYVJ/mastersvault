@@ -16,7 +16,7 @@ test('Mock 1 runs with the exam rules: section order, answer to advance, no goin
   await expect(page.getByRole('heading', { name: 'Quantitative Reasoning' })).toBeVisible();
   await page.getByRole('button', { name: 'Begin section' }).click();
 
-  await expect(page.getByText('Question 1 of 21')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Question 1 of 21', exact: true })).toBeVisible();
   await expect(page.getByText('Time remaining')).toBeVisible();
   const next = page.getByRole('button', { name: /^Next/ });
   await expect(next).toBeDisabled();
@@ -24,7 +24,7 @@ test('Mock 1 runs with the exam rules: section order, answer to advance, no goin
 
   // Answer every question with the first choice.
   for (let i = 1; i <= 21; i++) {
-    await expect(page.getByText(`Question ${i} of 21`)).toBeVisible();
+    await expect(page.getByRole('heading', { name: `Question ${i} of 21`, exact: true })).toBeVisible();
     await page.locator('.q-choice input').first().check();
     if (i < 21) await next.click();
   }

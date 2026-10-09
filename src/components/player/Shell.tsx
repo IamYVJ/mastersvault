@@ -1,7 +1,7 @@
 // The full-screen frame around every player screen: a status bar on top
 // (title, tools, timer, question counter, bookmark) and an action bar at the bottom.
 import './player.css';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { formatDuration } from '../../lib/engine/results.ts';
 import type { ToolBar } from './context.ts';
 import { BookmarkIcon, CalculatorIcon, ClockIcon, EyeIcon, PenIcon } from './icons.tsx';
@@ -20,6 +20,8 @@ interface Props {
   counter?: string;
   bookmark?: { on: boolean; toggle: () => void };
   tools?: ToolBar;
+  /** Names the screen when it has no question counter, e.g. "Set up" or "Optional break". */
+  screen?: string;
   footerLeft?: ReactNode;
   footerRight?: ReactNode;
   children: ReactNode;
@@ -55,7 +57,9 @@ function Timer({ ms, countdown, label }: TimerInfo) {
       ) : (
         <span>
           <span className="player-timer-label">{label ?? (countdown ? 'Time remaining' : 'Time elapsed')}</span>{' '}
-          <strong className="player-timer-value" aria-live={low ? 'polite' : 'off'}>
+          {/* Not a live region: a clock that announced itself every second would drown out the question.
+              The 5-minute warning and the time-up notice are announced as dialogs instead. */}
+          <strong className="player-timer-value" role="timer" aria-live="off">
             {formatDuration(ms)}
           </strong>
         </span>
@@ -72,7 +76,18 @@ const TOOL_BUTTONS = {
   whiteboard: { label: 'Whiteboard', Icon: PenIcon },
 } as const;
 
-export default function Shell({ title, subtitle, timer, counter, bookmark, tools, footerLeft, footerRight, children, wide }: Props) {
+export default function Shell({ title, subtitle, timer, counter, bookmark, tools, screen, footerLeft, footerRight, children, wide }: Props) {
+  // When the screen or the question changes, move keyboard and screen-reader focus to the top of the
+  // new content. Otherwise focus stays on the button that was just pressed, at the bottom of the page.
+  const main = useRef<HTMLElement>(null);
+  const label = [screen ?? counter, subtitle, title].filter(Boolean).join(', ');
+  useEffect(() => {
+    const el = main.current;
+    if (!el) return;
+    el.scrollTop = 0;
+    if (!document.querySelector('.modal')) el.focus({ preventScroll: true });
+  }, [label]);
+
   return (
     <div className="player">
       <header className="player-bar player-top">
@@ -109,7 +124,7 @@ export default function Shell({ title, subtitle, timer, counter, bookmark, tools
           )}
         </div>
       </header>
-      <main className="player-main">
+      <main className="player-main" ref={main} tabIndex={0} aria-label={label}>
         <div className={`player-content ${wide ? 'is-wide' : ''}`}>{children}</div>
       </main>
       <footer className="player-bar player-bottom">

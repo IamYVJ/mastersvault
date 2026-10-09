@@ -92,6 +92,7 @@ export default function ResultsScreen({ payload, attempt, exitUrl, exitLabel = '
           </p>
         )}
 
+        <h2 className="visually-hidden">Results by section</h2>
         <div className="player-score-cards">
           {results.map((s, i) => (
             <SectionCard key={s.id} s={s} estimate={estimates?.sections[i]} />
@@ -164,7 +165,7 @@ function SectionCard({ s, estimate }: { s: SectionResult; estimate?: Estimate })
 function BreakdownTable({ title, rows }: { title: string; rows: BreakdownRow[] }) {
   return (
     <div className="player-breakdown">
-      <h4>{title}</h4>
+      <h3>{title}</h3>
       <table className="player-table">
         <thead>
           <tr>
@@ -223,7 +224,7 @@ function SectionDetail({ s, topics, onOpen }: { s: SectionResult; topics: Record
       </div>
 
       <h3 className="player-result-sub">Questions</h3>
-      <div className="player-table-scroll">
+      <div className="player-table-scroll" tabIndex={0} role="region" aria-label={`${s.name}: questions`}>
         <table className="player-table player-results-table">
           <thead>
             <tr>
@@ -326,6 +327,9 @@ function ReviewQuestion({
         </>
       }
     >
+      <h1 className="visually-hidden">
+        Question {r.number} of {section.total}, review
+      </h1>
       <div className="player-result-meta">
         <Outcome answered={r.answered} correct={r.correct} />
         <span>{TYPE_LABELS[r.type]}</span>

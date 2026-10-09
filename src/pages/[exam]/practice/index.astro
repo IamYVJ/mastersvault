@@ -12,7 +12,10 @@ const { config } = exam;
 const bySection = config.sections.map((s) => ({ section: s, tests: exam.practice.filter((t) => t.sections[0].id === s.id) }));
 ---
 
-<Base title={`${config.name} section practice`}>
+<Base
+  title={`${config.name} section practice sets`}
+  description={`${exam.practice.length} free ${config.name} practice sets by section and topic, timed or untimed, with an explanation for every question. Unofficial.`}
+>
   <div class="container page">
     <header class="page-head">
       <p class="eyebrow">{config.name}</p>
@@ -28,11 +31,11 @@ const bySection = config.sections.map((s) => ({ section: s, tests: exam.practice
         <section class="section">
           <h2>{section.name}</h2>
           {tests.length ? (
-            <div class="grid">
+            <ul class="index">
               {tests.map((test) => (
                 <TestCard exam={exam} test={test} />
               ))}
-            </div>
+            </ul>
           ) : (
             <p class="muted">No practice sets yet.</p>
           )}

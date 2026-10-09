@@ -1,41 +1,38 @@
 /* Progress dashboard. */
 
 .dash-section {
-  margin-top: 32px;
+  margin-top: 56px;
 }
 .dash-section:first-child {
   margin-top: 0;
 }
 .dash-section h2 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  margin-bottom: 18px;
 }
 
 /* stat tiles */
 .dash-tiles {
   display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 28px 36px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
 }
 .dash-tile {
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 14px 0 0;
+  border-top: 1px solid var(--text);
 }
 .dash-tile p {
   margin: 0;
 }
 .dash-tile-label {
   font-size: 0.875rem;
-  font-weight: 600;
   color: var(--text-muted);
 }
 .dash-tile-value {
-  font-size: 1.9rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  font-size: 2.1rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
 }
 .dash-tile-note {
   font-size: 0.8rem;
@@ -47,13 +44,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
 }
 .dash-resume h3 {
   margin: 2px 0 0;
 }
 .dash-resume p {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
 /* focus table */
@@ -61,9 +58,9 @@
   width: 28%;
 }
 .dash-meter {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--accent-soft);
+  height: 3px;
+  margin-top: 0.7em;
+  background: var(--surface-3);
   overflow: hidden;
   min-width: 60px;
 }
@@ -75,13 +72,13 @@
 }
 table.data td.is-slow {
   color: var(--warning);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 /* data tools */
 .dash-data {
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
+  padding-top: 28px;
+  border-top: 1px solid var(--text);
 }
 .dash-actions {
   display: flex;
@@ -121,10 +118,8 @@ table.data td.is-slow {
 /* trend chart */
 .trend {
   margin: 0;
-  padding: 16px 18px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
+  padding: 14px 0 0;
+  border-top: 1px solid var(--text);
 }
 .trend-head {
   display: flex;
@@ -134,7 +129,7 @@ table.data td.is-slow {
   margin-bottom: 6px;
 }
 .trend-title {
-  font-weight: 650;
+  font-weight: 600;
 }
 .trend-legend {
   display: flex;
@@ -171,14 +166,14 @@ table.data td.is-slow {
 .trend-tick {
   fill: var(--text-muted);
   font-size: 12px;
-  font-family: var(--font-sans);
+  font-family: var(--font);
   font-variant-numeric: tabular-nums;
 }
 .trend-end {
   fill: var(--text);
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--font-sans);
+  font-family: var(--font);
 }
 .trend-tip {
   position: absolute;
@@ -186,10 +181,9 @@ table.data td.is-slow {
   display: grid;
   gap: 3px;
   padding: 8px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--text);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  box-shadow: var(--shadow);
   font-size: 0.8rem;
   color: var(--text-muted);
   white-space: nowrap;

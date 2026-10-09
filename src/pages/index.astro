@@ -1,9 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getExams } from '../lib/content/index.ts';
+import { websiteData } from '../lib/seo.ts';
 import { url } from '../lib/url';
 
 const exams = getExams();
+const sum = (count: (e: (typeof exams)[number]) => number) => exams.reduce((n, e) => n + count(e), 0);
+const figures = [
+  { value: sum((e) => e.mocks.length), label: 'mock tests' },
+  { value: sum((e) => e.practice.length), label: 'practice sets' },
+  { value: sum((e) => e.questions.size), label: 'questions' },
+  { value: sum((e) => e.notes.size), label: 'revision notes' },
+];
 const features = [
   {
     title: 'Full-length mocks',
@@ -24,11 +32,11 @@ const features = [
 ];
 ---
 
-<Base>
+<Base jsonLd={websiteData(Astro.site)}>
   <section class="hero">
     <div class="container">
       <p class="eyebrow">Free and open source</p>
-      <h1>Practice that feels like test day.</h1>
+      <h1>Practice that feels like test day.<span class="caret" aria-hidden="true"></span></h1>
       <p class="lead">
         MastersVault offers original mock tests, section practice and revision notes for graduate admissions exams.
         The test screen works like the real one.
@@ -37,67 +45,140 @@ const features = [
         <a class="btn btn-primary" href={url('/gmat/')}>Start GMAT prep</a>
         <a class="btn" href={url('/gmat/practice/')}>Try a practice set</a>
       </div>
+      <dl class="figures">
+        {
+          figures.map((f) => (
+            <div>
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
     </div>
   </section>
 
   <div class="container page">
-    <div class="grid">
+    <h2 class="visually-hidden">What you get</h2>
+    <ol class="grid features">
       {
         features.map((f) => (
-          <div class="card">
+          <li class="card">
             <h3>{f.title}</h3>
-            <p class="muted">{f.body}</p>
-          </div>
+            <p class="muted small">{f.body}</p>
+          </li>
         ))
       }
-    </div>
+    </ol>
 
     <section class="section">
       <h2>Exams</h2>
-      <div class="grid">
+      <ul class="index">
         {
           exams.map((e) => (
-            <a class="card exam-card" href={url(`/${e.id}/`)}>
-              <h3>{e.config.name}</h3>
-              <p class="muted">{e.config.description}</p>
-              <p class="small">
-                {e.config.sections.map((s) => s.shortName).join(' · ')} · {e.mocks.length} mocks ·{' '}
-                {e.practice.length} practice sets
-              </p>
-            </a>
+            <li>
+              <a class="entry" href={url(`/${e.id}/`)}>
+                <div class="entry-line">
+                  <h3>{e.config.name}</h3>
+                  <span class="leader" aria-hidden="true" />
+                  <span class="entry-meta">
+                    {e.config.sections.map((s) => s.shortName).join(' · ')} · {e.mocks.length} mocks ·{' '}
+                    {e.practice.length} practice sets
+                  </span>
+                </div>
+                <p class="entry-desc">{e.config.description}</p>
+              </a>
+            </li>
           ))
         }
-      </div>
+      </ul>
     </section>
   </div>
 </Base>
 
 <style>
   .hero {
-    padding: 64px 0 40px;
-    border-bottom: 1px solid var(--border);
-    background:
-      radial-gradient(1200px 400px at 20% -10%, var(--accent-soft), transparent 70%),
-      var(--bg);
+    padding: clamp(56px, 11vw, 128px) 0 0;
+  }
+  .hero h1 {
+    max-width: 17ch;
+    margin-bottom: 0.55em;
+    font-size: clamp(2.1rem, 1.2rem + 4.2vw, 3.9rem);
+    letter-spacing: -0.045em;
+    line-height: 1.06;
+  }
+  /* The typist's cursor at the end of the headline. */
+  .caret {
+    display: inline-block;
+    width: 0.5em;
+    height: 0.86em;
+    margin-left: 0.14em;
+    background: var(--text);
+    vertical-align: -0.06em;
+    animation: blink 1.15s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
   }
   .lead {
-    max-width: 60ch;
-    font-size: 1.15rem;
+    max-width: 58ch;
     color: var(--text-muted);
   }
   .actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-top: 24px;
+    margin-top: 32px;
   }
-  .exam-card {
-    color: inherit;
-    text-decoration: none;
-    transition: border-color 0.15s;
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px 36px;
+    margin: clamp(56px, 9vw, 104px) 0 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--text);
   }
-  .exam-card:hover {
-    border-color: var(--accent);
-    color: inherit;
+  .figures div {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .figures dt {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .figures dd {
+    margin: 0;
+    font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.4rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+  }
+  .features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: feature;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  }
+  .features li {
+    counter-increment: feature;
+  }
+  .features li::before {
+    content: counter(feature, decimal-leading-zero);
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+  .features p {
+    max-width: 52ch;
+  }
+  @media (max-width: 640px) {
+    .figures {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>

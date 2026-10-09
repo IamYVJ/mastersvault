@@ -134,7 +134,63 @@ export default function Chart({ chart }: { chart: ChartSpec }) {
     }
   }
 
-  const label = `${chart.title ?? 'Chart'}${chart.kind === 'scatter' ? '' : `: ${chart.categories.join(', ')}`}`;
+  const kind = { bar: 'Bar chart', line: 'Line chart', scatter: 'Scatter plot' }[chart.kind];
+  const label = `${kind}${chart.title ? `: ${chart.title}` : ''}. The values are in the table that follows.`;
+  // Exact values, not rounded to the axis step as the tick labels are.
+  const yUnit = (v: number) => `${chart.y.prefix ?? ''}${v.toLocaleString('en-US', { maximumFractionDigits: 6 })}${chart.y.suffix ?? ''}`;
+
+  // People who can't see the chart get the same data as a table. It is hidden visually, because for
+  // everyone else reading values off the chart is part of the task.
+  const dataTable =
+    chart.kind === 'scatter' ? (
+      <table className="visually-hidden">
+        <caption>{chart.title ?? 'Chart'}: data</caption>
+        <thead>
+          <tr>
+            {multi && <th scope="col">Series</th>}
+            <th scope="col">{chart.x.label ?? 'Horizontal value'}</th>
+            <th scope="col">{chart.y.label ?? 'Vertical value'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {chart.series.flatMap((s) =>
+            s.points.map(([px, py], j) => (
+              <tr key={`${s.name}-${j}`}>
+                {multi && <td>{s.name}</td>}
+                <td>{px}</td>
+                <td>{yUnit(py)}</td>
+              </tr>
+            )),
+          )}
+        </tbody>
+      </table>
+    ) : (
+      <table className="visually-hidden">
+        <caption>
+          {chart.title ?? 'Chart'}: data{chart.y.label ? ` (${chart.y.label})` : ''}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{chart.x.label ?? 'Category'}</th>
+            {chart.series.map((s) => (
+              <th key={s.name} scope="col">
+                {s.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {chart.categories.map((c, j) => (
+            <tr key={c}>
+              <th scope="row">{c}</th>
+              {chart.series.map((s) => (
+                <td key={s.name}>{yUnit(s.values[j])}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
 
   return (
     <figure className="q-chart" ref={ref}>
@@ -174,6 +230,7 @@ export default function Chart({ chart }: { chart: ChartSpec }) {
           </text>
         )}
       </svg>
+      {dataTable}
     </figure>
   );
 }

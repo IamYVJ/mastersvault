@@ -1,0 +1,26 @@
+---
+// Shown by the service worker when a page is requested offline and no copy has been saved.
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/url';
+---
+
+<Base title="You're offline" noindex>
+  <div class="container page">
+    <header class="page-head">
+      <h1>You're offline</h1>
+      <p>This page hasn't been saved on this device yet, so it can't be shown without an internet connection.</p>
+    </header>
+    <div class="prose">
+      <p>What still works offline:</p>
+      <ul>
+        <li>Any page you have already visited on this device.</li>
+        <li>
+          Any mock test or practice set whose page you have opened. Opening a test's page saves the whole test, and your
+          answers are stored on this device as usual.
+        </li>
+        <li>Your <a href={url('/dashboard/')}>dashboard</a> and past results.</li>
+      </ul>
+      <p>Reconnect and reload to see this page.</p>
+    </div>
+  </div>
+</Base>

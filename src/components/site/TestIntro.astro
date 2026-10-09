@@ -14,18 +14,19 @@ const minutes = rows.reduce((n, s) => n + s.timeMinutes, 0);
 const kindPath = test.kind === 'mock' ? 'mocks' : 'practice';
 const listHref = url(`/${exam.id}/${kindPath}/`);
 const takeHref = url(`/${exam.id}/${kindPath}/${test.id}/take/`);
+const dataHref = url(`/data/${exam.id}/${kindPath}/${test.id}.json`);
 const testKey = `${exam.id}/${kindPath}/${test.id}`;
 ---
 
 <div class="container page">
-  <p class="small"><a href={listHref}>← {test.kind === 'mock' ? 'All mocks' : 'All practice sets'}</a></p>
+  <p class="back"><a href={listHref}>← {test.kind === 'mock' ? 'All mocks' : 'All practice sets'}</a></p>
   <header class="page-head">
     <p class="eyebrow">{config.name} · {test.kind === 'mock' ? 'Mock test' : 'Practice set'}</p>
     <h1>{test.title}</h1>
     {test.description && <p>{test.description}</p>}
   </header>
 
-  <div class="table-wrap">
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Sections in this test">
     <table class="data">
       <thead>
         <tr>
@@ -50,7 +51,7 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
     </table>
   </div>
 
-  <div class="start" data-test-key={testKey} data-take={takeHref}>
+  <div class="start" data-test-key={testKey} data-take={takeHref} data-data={dataHref}>
     <a class="btn btn-primary" href={takeHref} data-role="primary">Start ({minutes} min)</a>
     <a class="btn" href={`${takeHref}?new`} data-role="restart" hidden>Start over</a>
     <p class="muted small" data-role="status">
@@ -59,6 +60,9 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
           ? 'Opens the full-screen test. Set aside the full time and take it in one sitting.'
           : 'Opens the full-screen test. You can choose timed or untimed on the next screen.'
       }
+    </p>
+    <p class="muted small" data-role="offline" role="status" hidden>
+      Saved on this device. You can take this test without an internet connection.
     </p>
   </div>
 </div>
@@ -74,12 +78,27 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
   .start p {
     margin: 0;
   }
-  .start p[data-role='status'] {
+  .start p[data-role='status'],
+  .start p[data-role='offline'] {
     flex-basis: 100%;
   }
 </style>
 
 <script>
+  // Save this test for offline use. The service worker only exists in the built site.
+  async function saveForOffline(box: HTMLElement) {
+    if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+    // On a first visit the service worker is still being installed, so wait for it.
+    const worker = (await navigator.serviceWorker.ready).active;
+    if (!worker) return;
+    const channel = new MessageChannel();
+    channel.port1.onmessage = (event) => {
+      if (event.data?.saved) box.querySelector<HTMLElement>('[data-role="offline"]')!.hidden = false;
+    };
+    worker.postMessage({ type: 'save', urls: [box.dataset.take, box.dataset.data] }, [channel.port2]);
+  }
+  for (const box of document.querySelectorAll<HTMLElement>('.start[data-test-key]')) saveForOffline(box).catch(() => {});
+
   // Offer to resume an unfinished attempt (or reopen the last results) saved in this browser.
   for (const box of document.querySelectorAll<HTMLElement>('.start[data-test-key]')) {
     let saved: { phase?: string; createdAt?: number; finishedAt?: number | null } | null = null;

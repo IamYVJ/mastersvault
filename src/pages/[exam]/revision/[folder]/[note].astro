@@ -5,6 +5,7 @@ import Base from '../../../../layouts/Base.astro';
 import { GENERAL_NOTES, getExam, listExamIds, renderDocument } from '../../../../lib/content/index.ts';
 import { KIND_LABELS, noteHref, practiceFor, sortedNotes } from '../../../../lib/content/revision.ts';
 import { TYPE_LABELS } from '../../../../lib/content/labels.ts';
+import { breadcrumbData, learningResourceData } from '../../../../lib/seo.ts';
 import { url } from '../../../../lib/url';
 
 export function getStaticPaths() {
@@ -25,11 +26,21 @@ const at = siblings.findIndex((n) => n.id === note.id);
 const prev = siblings[at - 1];
 const next = siblings[at + 1];
 const where = note.folder === GENERAL_NOTES ? 'Whole exam' : section!.name;
+const path = `/${exam.id}/revision/${note.folder}/${note.slug}/`;
+const subject = section ? `${exam.config.name} ${section.name}` : exam.config.name;
+const jsonLd = [
+  learningResourceData(Astro.site, { name: `${note.data.title}: ${subject} revision notes`, description: note.data.summary, path, type: 'Study notes', about: subject }),
+  breadcrumbData(Astro.site, [
+    { name: exam.config.name, path: `/${exam.id}/` },
+    { name: 'Revision', path: `/${exam.id}/revision/` },
+    { name: note.data.title, path },
+  ]),
+];
 ---
 
-<Base title={note.data.title} description={note.data.summary}>
+<Base title={`${note.data.title}: ${exam.config.name} revision notes`} description={note.data.summary} jsonLd={jsonLd}>
   <div class="container page">
-    <p class="small"><a href={url(`/${exam.id}/revision/`)}>← All revision notes</a></p>
+    <p class="back"><a href={url(`/${exam.id}/revision/`)}>← All revision notes</a></p>
     <header class="page-head">
       <p class="eyebrow">{where} · {KIND_LABELS[note.data.kind]}</p>
       <h1>{note.data.title}</h1>

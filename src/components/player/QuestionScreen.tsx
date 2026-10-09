@@ -108,6 +108,9 @@ export default function QuestionScreen(props: PlayerProps) {
         </div>
       )}
       <div key={qid} className="player-question">
+        <h1 className="visually-hidden">
+          Question {index + 1} of {total}
+        </h1>
         <QuestionView
           question={question}
           passage={passage}

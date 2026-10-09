@@ -14,7 +14,10 @@ const minutes = config.sections.reduce((n, s) => n + s.timeMinutes, 0);
 const questions = config.sections.reduce((n, s) => n + s.questionCount, 0);
 ---
 
-<Base title={`${config.name} mock tests`}>
+<Base
+  title={`Free ${config.name} mock tests`}
+  description={`${exam.mocks.length} free, full-length ${config.name} mock tests with ${questions} original questions each, the exam's timing and rules, score estimates and full explanations. Unofficial.`}
+>
   <div class="container page">
     <header class="page-head">
       <p class="eyebrow">{config.name}</p>
@@ -29,11 +32,12 @@ const questions = config.sections.reduce((n, s) => n + s.questionCount, 0);
 
     {
       exam.mocks.length ? (
-        <div class="grid">
+        <h2 class="visually-hidden">Available mock tests</h2>
+        <ul class="index">
           {exam.mocks.map((test) => (
             <TestCard exam={exam} test={test} />
           ))}
-        </div>
+        </ul>
       ) : (
         <div class="notice">
           <p>

@@ -5,7 +5,7 @@ import AttemptViewer from '../../components/dashboard/AttemptViewer.tsx';
 import { buildCatalog } from '../../lib/content/catalog.ts';
 import { url } from '../../lib/url';
 
-const { tests } = buildCatalog(url, import.meta.env.DEV);
+const { tests } = buildCatalog(url);
 const viewerTests = Object.fromEntries(Object.entries(tests).map(([k, t]) => [k, { dataUrl: t.dataUrl, href: t.href }]));
 ---
 

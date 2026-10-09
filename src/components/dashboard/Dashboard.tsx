@@ -155,7 +155,7 @@ function Unfinished({ items, catalog }: { items: InProgress[]; catalog: Catalog 
 function FocusTable({ rows, catalog }: { rows: ReturnType<typeof topicStats>; catalog: Catalog }) {
   const sectionName = (id: string) => catalog.sections.find((s) => s.id === id)?.name ?? id;
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" tabIndex={0} role="region" aria-label="Weakest topics">
       <table className="data dash-focus">
         <thead>
           <tr>
@@ -204,7 +204,7 @@ function FocusTable({ rows, catalog }: { rows: ReturnType<typeof topicStats>; ca
 
 function HistoryTable({ history, catalog }: { history: HistoryEntry[]; catalog: Catalog }) {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" tabIndex={0} role="region" aria-label="History of finished tests">
       <table className="data">
         <thead>
           <tr>

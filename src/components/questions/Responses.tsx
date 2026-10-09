@@ -1,5 +1,6 @@
 // Answer inputs for the four response shapes. With `onChange` omitted they are
 // read-only; with `reveal` they mark the correct answer and any wrong picks.
+import { useId } from 'react';
 import type { ResponseSpec, ResponseValue } from '../../lib/content/types.ts';
 
 type Spec<K extends ResponseSpec['kind']> = Extract<ResponseSpec, { kind: K }>;
@@ -52,12 +53,17 @@ export function ChoiceList({ spec, value, onChange, reveal, name }: Props<'choic
 export function DichotomousGrid({ spec, value, onChange, reveal, name }: Props<'dichotomous'>) {
   const n = spec.statements.length;
   const v = parts(value, n);
+  const id = useId();
   return (
     <table className="q-grid">
       <thead>
         <tr>
-          <th scope="col">{spec.labels[0]}</th>
-          <th scope="col">{spec.labels[1]}</th>
+          <th scope="col" id={`${id}-c0`}>
+            {spec.labels[0]}
+          </th>
+          <th scope="col" id={`${id}-c1`}>
+            {spec.labels[1]}
+          </th>
           <th scope="col">
             <span className="visually-hidden">Statement</span>
           </th>
@@ -71,14 +77,14 @@ export function DichotomousGrid({ spec, value, onChange, reveal, name }: Props<'
                 <input
                   type="radio"
                   name={`${name}-${i}`}
-                  aria-label={`${spec.labels[col]}: statement ${i + 1}`}
+                  aria-labelledby={`${id}-c${col} ${id}-r${i}`}
                   checked={v[i] === col}
                   disabled={!onChange}
                   onChange={() => onChange?.(setPart(value, n, i, col))}
                 />
               </td>
             ))}
-            <td className="q-grid-text" dangerouslySetInnerHTML={{ __html: s.html }} />
+            <td className="q-grid-text" id={`${id}-r${i}`} dangerouslySetInnerHTML={{ __html: s.html }} />
           </tr>
         ))}
       </tbody>
@@ -97,7 +103,7 @@ export function DropdownStatements({ spec, value, onChange, reveal, name }: Prop
           <p key={i} className="q-dropdown-line">
             <span dangerouslySetInnerHTML={{ __html: s.before }} />{' '}
             <select
-              aria-label={`Statement ${i + 1}`}
+              aria-label={`Statement ${i + 1}: choose the missing value`}
               name={`${name}-${i}`}
               className={reveal && v[i] !== null ? (correct ? 'is-correct' : 'is-wrong') : ''}
               value={v[i] ?? ''}
@@ -124,12 +130,13 @@ export function DropdownStatements({ spec, value, onChange, reveal, name }: Prop
 
 export function TwoPartGrid({ spec, value, onChange, reveal, name }: Props<'two-part'>) {
   const v = parts(value, 2);
+  const id = useId();
   return (
     <table className="q-grid">
       <thead>
         <tr>
-          <th scope="col" dangerouslySetInnerHTML={{ __html: spec.columns[0] }} />
-          <th scope="col" dangerouslySetInnerHTML={{ __html: spec.columns[1] }} />
+          <th scope="col" id={`${id}-c0`} dangerouslySetInnerHTML={{ __html: spec.columns[0] }} />
+          <th scope="col" id={`${id}-c1`} dangerouslySetInnerHTML={{ __html: spec.columns[1] }} />
           <th scope="col">
             <span className="visually-hidden">Option</span>
           </th>
@@ -143,14 +150,14 @@ export function TwoPartGrid({ spec, value, onChange, reveal, name }: Props<'two-
                 <input
                   type="radio"
                   name={`${name}-col${col}`}
-                  aria-label={`Column ${col + 1}: option ${row + 1}`}
+                  aria-labelledby={`${id}-c${col} ${id}-r${row}`}
                   checked={v[col] === row}
                   disabled={!onChange}
                   onChange={() => onChange?.(setPart(value, 2, col, row))}
                 />
               </td>
             ))}
-            <td className="q-grid-text" dangerouslySetInnerHTML={{ __html: html }} />
+            <td className="q-grid-text" id={`${id}-r${row}`} dangerouslySetInnerHTML={{ __html: html }} />
           </tr>
         ))}
       </tbody>

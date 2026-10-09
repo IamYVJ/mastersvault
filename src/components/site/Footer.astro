@@ -14,7 +14,7 @@ import { url } from '../../lib/url';
         <a href={SITE.repo}>Source on GitHub</a>
       </nav>
       <p class="license">
-        Questions and notes: <a href={SITE.contentLicense.url}>{SITE.contentLicense.name}</a> · Code:
+        © 2026 {SITE.name} contributors · Questions and notes: <a href={SITE.contentLicense.url}>{SITE.contentLicense.name}</a> · Code:{' '}
         <a href={SITE.codeLicense.url}>{SITE.codeLicense.name}</a>
       </p>
     </div>
@@ -24,35 +24,30 @@ import { url } from '../../lib/url';
 <style>
   .site-footer {
     border-top: 1px solid var(--border);
-    background: var(--surface);
-    padding: 28px 0 36px;
-    font-size: 0.875rem;
+    padding: 32px 0 44px;
+    font-size: 0.8rem;
+    line-height: 1.7;
     color: var(--text-muted);
   }
   .disclaimer {
-    max-width: 90ch;
+    max-width: 84ch;
+    margin-bottom: 20px;
   }
   .row {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 12px 24px;
+    gap: 10px 28px;
   }
   nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 18px;
+    gap: 6px 22px;
   }
-  nav a {
-    color: var(--text-muted);
-  }
-  nav a:hover {
+  a:hover {
     color: var(--text);
   }
   .license {
     margin: 0;
-  }
-  .license a {
-    color: inherit;
   }
 </style>
