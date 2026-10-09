@@ -6,26 +6,6 @@ Free, open-source practice for graduate admissions tests: full-length mocks, sec
 
 **Status:** the GMAT content (6 mocks, 12 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them.
 
-## Running it
-
-Requires Node 22.18 or later (see `.node-version`).
-
-```bash
-npm install
-npm run dev          # http://localhost:4321/mastersvault/
-```
-
-| Command | What it does |
-|---|---|
-| `npm run dev` | Dev server. It also serves a question bank preview at `/mastersvault/preview/`, for reviewing content. |
-| `npm run build` | Production build to `dist/`. |
-| `npm run validate` | Checks all content: schemas, references, mock composition, math rendering. |
-| `npm run verify` | Recomputes every calculable answer by brute force and compares it with the answer key. |
-| `npm run coverage` | Question counts by section, type, difficulty and topic. |
-| `npm test` | Unit tests. |
-| `npm run test:e2e` | Builds the site and runs the browser tests (full test runs, accessibility, keyboard, offline). Run `npx playwright install chromium` once first, or set `PW_CHANNEL=chrome` to use an installed browser. |
-| `npm run check` | Type check. |
-
 ## Layout
 
 ```
