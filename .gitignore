@@ -29,3 +29,5 @@ Thumbs.db
 # local tool settings
 /.claude
 
+# content lives in its own private repository (see README)
+/content/

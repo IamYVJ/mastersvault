@@ -6,9 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 
-const contentDir = path.resolve('content');
+// Same rule as CONTENT_ROOT in src/lib/content/load.ts.
+const contentDir = fs.existsSync(path.resolve('content')) ? path.resolve('content') : path.resolve('../mastersvault-content');
 
-/** Reload the browser in dev when anything under content/ changes. */
+/** Reload the browser in dev when any content file changes. */
 function contentReload() {
   return {
     name: 'mastersvault:content-reload',

@@ -6,6 +6,11 @@
   font-size: 1rem;
   line-height: 1.7;
 }
+.q-view.is-guarded {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 
 /* ---------------------------------------------------------------- layout */
 .q-single .q-main {

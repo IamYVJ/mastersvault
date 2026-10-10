@@ -17,11 +17,19 @@ concurrency:
 
 jobs:
   build:
+    # The content is in a private repository, and pull requests from forks can't read the key for it.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     env:
       ASTRO_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v5
+      - name: Fetch content
+        uses: actions/checkout@v5
+        with:
+          repository: IamYVJ/mastersvault-content
+          ssh-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          path: content
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version

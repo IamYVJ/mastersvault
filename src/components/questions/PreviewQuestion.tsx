@@ -37,6 +37,7 @@ export default function PreviewQuestion({ question, passage, sources }: Props) {
         response={response}
         onChange={setResponse}
         reveal={reveal}
+        copyable
       />
     </div>
   );

@@ -105,3 +105,13 @@ test('the rules are explained before a practice set starts', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'How it works' })).toBeVisible();
   await expect(page.getByText('You can move back and forth between questions')).toBeVisible();
 });
+
+test('question text cannot be selected, copied or right-clicked', async ({ page }) => {
+  await start(page, 'verbal-sampler');
+  const view = page.locator('.q-view');
+  await expect(view).toHaveCSS('user-select', 'none');
+  const blocked = await view.locator('.q-main').evaluate((el) =>
+    ['copy', 'contextmenu'].map((type) => !el.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }))),
+  );
+  expect(blocked).toEqual([true, true]);
+});

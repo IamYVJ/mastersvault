@@ -6,7 +6,7 @@
 // single column.
 import 'katex/dist/katex.min.css';
 import './questions.css';
-import type { ReactNode } from 'react';
+import type { ReactNode, SyntheticEvent } from 'react';
 import type { RenderedPassage, RenderedQuestion, RenderedSourceSet, ResponseValue } from '../../lib/content/types.ts';
 import Chart from './Chart.tsx';
 import DataTable from './DataTable.tsx';
@@ -24,7 +24,16 @@ export interface QuestionViewProps {
   reveal?: boolean;
   /** Extra content under the explanation, e.g. a "report an issue" link. */
   explanationFooter?: ReactNode;
+  /** Allow selecting and copying the text. Off by default, as in the exam. */
+  copyable?: boolean;
 }
+
+// A deterrent only: it stops casual copying, not a determined reader.
+const block = (e: SyntheticEvent) => e.preventDefault();
+const blockMenu = (e: SyntheticEvent) => {
+  if (!(e.target as Element).closest('a')) e.preventDefault();
+};
+const guard = { onCopy: block, onCut: block, onDragStart: block, onContextMenu: blockMenu };
 
 export default function QuestionView({
   question: q,
@@ -34,10 +43,12 @@ export default function QuestionView({
   onChange,
   reveal = false,
   explanationFooter,
+  copyable = false,
 }: QuestionViewProps) {
   const name = `q-${q.id}`;
   const spec = q.response;
   const props = { value: response, onChange, reveal, name };
+  const root = copyable ? { className: 'q-view' } : { className: 'q-view is-guarded', ...guard };
 
   const answer =
     spec.kind === 'choice' ? (
@@ -75,7 +86,7 @@ export default function QuestionView({
 
   if (stimulus?.kind === 'passage' || stimulus?.kind === 'sources') {
     return (
-      <div className="q-view q-split">
+      <div {...root} className={`${root.className} q-split`}>
         {/* Scrolls on its own, so it must be reachable by keyboard. */}
         <div className="q-stimulus" tabIndex={0} role="region" aria-label={stimulus.kind === 'passage' ? 'Passage' : 'Sources'}>
           {stimulus.kind === 'passage' && passage && (
@@ -89,5 +100,9 @@ export default function QuestionView({
       </div>
     );
   }
-  return <div className="q-view q-single">{main}</div>;
+  return (
+    <div {...root} className={`${root.className} q-single`}>
+      {main}
+    </div>
+  );
 }

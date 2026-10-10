@@ -29,7 +29,10 @@ import {
 } from './schema.ts';
 import { parseFrontmatter, parseYaml } from './yaml.ts';
 
-export const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
+// The content is kept in its own repository. It's read from content/ when that folder exists
+// (the build workflow checks it out there), and otherwise from a checkout next to this one.
+const inProject = path.resolve(process.cwd(), 'content');
+export const CONTENT_ROOT = fs.existsSync(inProject) ? inProject : path.resolve(process.cwd(), '../mastersvault-content');
 
 export interface Issue {
   level: 'error' | 'warning';

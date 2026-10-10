@@ -1,6 +1,6 @@
 # Writing content
 
-All exam content lives in `content/<exam>/` as Markdown and YAML files. `npm run validate` checks everything, and the build fails if anything is broken. `npm run dev` then `/mastersvault/preview/` shows every question with its answer, and the page reloads when you save.
+All exam content lives in `content/<exam>/` as Markdown and YAML files. The content is kept in its own repository: clone it into `content/`, or next to this project as `mastersvault-content`. `npm run validate` checks everything, and the build fails if anything is broken. `npm run dev` then `/mastersvault/preview/` shows every question with its answer, and the page reloads when you save.
 
 ```
 content/gmat/
