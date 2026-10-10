@@ -16,7 +16,7 @@ export function buildCatalog(url: (path: string) => string) {
         tests[`${exam.id}/${kind}/${t.id}`] = {
           title: t.title,
           href: url(`/${exam.id}/${kind}/${t.id}/`),
-          dataUrl: url(`/data/${exam.id}/${kind}/${t.id}.json`),
+          dataUrl: url(`/data/${exam.id}/${kind}/${t.id}.bin`),
         };
     }
 

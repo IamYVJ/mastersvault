@@ -1,6 +1,8 @@
-// Compiled test payloads, fetched by the test player at /data/<exam>/<mocks|practice>/<test>.json
+// Compiled test payloads, fetched by the test player at /data/<exam>/<mocks|practice>/<test>.bin
+// They're packed (see src/lib/engine/codec.ts), so the published files aren't readable as text.
 import type { APIRoute } from 'astro';
 import { buildTestPayload, getExam, listExamIds } from '../../../../lib/content/index.ts';
+import { packPayload } from '../../../../lib/engine/codec.ts';
 
 export function getStaticPaths() {
   return listExamIds().flatMap((exam) => {
@@ -12,11 +14,11 @@ export function getStaticPaths() {
   });
 }
 
-export const GET: APIRoute = ({ params }) => {
+export const GET: APIRoute = async ({ params }) => {
   const bundle = getExam(params.exam!);
   const tests = params.kind === 'mocks' ? bundle.mocks : bundle.practice;
   const test = tests.find((t) => t.id === params.test)!;
-  return new Response(JSON.stringify(buildTestPayload(bundle, test)), {
-    headers: { 'Content-Type': 'application/json' },
+  return new Response(await packPayload(buildTestPayload(bundle, test)), {
+    headers: { 'Content-Type': 'application/octet-stream' },
   });
 };

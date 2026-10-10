@@ -23,6 +23,8 @@ tests/, e2e/         Unit tests and browser tests
 
 The questions and notes aren't in this repository. They're kept in a separate private repository, and the build workflow checks it out into `content/` with a read-only deploy key (the `CONTENT_DEPLOY_KEY` secret). Locally, the site reads `content/` if that folder exists, and otherwise a checkout named `mastersvault-content` next to this one.
 
+The test data published with the site is packed (compressed, then masked; see `src/lib/engine/codec.ts`), so the files don't open as readable text. That's a deterrent against casual copying and scraping, not security.
+
 ## Licences
 
 Copyright © 2026 the MastersVault contributors.

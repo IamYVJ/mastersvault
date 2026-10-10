@@ -16,7 +16,7 @@ const test = getExam(exam).practice.find((t) => t.id === id)!;
 <Base title={test.title} bare noindex>
   <TestPlayer
     client:only="react"
-    payloadUrl={url(`/data/${exam}/practice/${id}.json`)}
+    payloadUrl={url(`/data/${exam}/practice/${id}.bin`)}
     testKey={`${exam}/practice/${id}`}
     exitUrl={url(`/${exam}/practice/${id}/`)}
   >

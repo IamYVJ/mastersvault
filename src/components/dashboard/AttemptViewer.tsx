@@ -1,6 +1,7 @@
 // Reopens a finished attempt from the history with the full results screen.
 import { useEffect, useState } from 'react';
 import type { TestPayload } from '../../lib/content/types.ts';
+import { fetchPayload } from '../../lib/engine/codec.ts';
 import { loadHistory, type HistoryEntry } from '../../lib/engine/storage.ts';
 import ResultsScreen from '../player/ResultsScreen.tsx';
 
@@ -25,11 +26,7 @@ export default function AttemptViewer({ dashboardUrl, tests }: Props) {
     if (!entry) return setState({ status: 'missing' });
     const test = tests[entry.testKey];
     if (!test) return setState({ status: 'error', entry, message: 'This test is no longer on the site.' });
-    fetch(test.dataUrl)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<TestPayload>;
-      })
+    fetchPayload(test.dataUrl)
       .then((payload) => {
         const questionIds = Object.values(entry.attempt.sections).flatMap((s) => s.questionIds);
         if (questionIds.some((q) => !payload.questions[q]))

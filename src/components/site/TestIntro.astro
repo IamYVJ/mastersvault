@@ -14,7 +14,7 @@ const minutes = rows.reduce((n, s) => n + s.timeMinutes, 0);
 const kindPath = test.kind === 'mock' ? 'mocks' : 'practice';
 const listHref = url(`/${exam.id}/${kindPath}/`);
 const takeHref = url(`/${exam.id}/${kindPath}/${test.id}/take/`);
-const dataHref = url(`/data/${exam.id}/${kindPath}/${test.id}.json`);
+const dataHref = url(`/data/${exam.id}/${kindPath}/${test.id}.bin`);
 const testKey = `${exam.id}/${kindPath}/${test.id}`;
 ---
 

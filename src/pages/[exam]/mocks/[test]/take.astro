@@ -16,7 +16,7 @@ const test = getExam(exam).mocks.find((t) => t.id === id)!;
 <Base title={test.title} bare noindex>
   <TestPlayer
     client:only="react"
-    payloadUrl={url(`/data/${exam}/mocks/${id}.json`)}
+    payloadUrl={url(`/data/${exam}/mocks/${id}.bin`)}
     testKey={`${exam}/mocks/${id}`}
     exitUrl={url(`/${exam}/mocks/${id}/`)}
   >

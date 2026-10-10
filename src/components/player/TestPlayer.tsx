@@ -13,6 +13,7 @@ import {
   reduce,
   rulesFor,
 } from '../../lib/engine/attempt.ts';
+import { fetchPayload } from '../../lib/engine/codec.ts';
 import { clearAttempt, loadAttempt, recordAttempt, saveAttempt } from '../../lib/engine/storage.ts';
 import Calculator from './Calculator.tsx';
 import type { PlayerProps, ToolBar } from './context.ts';
@@ -36,11 +37,7 @@ export default function TestPlayer({ payloadUrl, testKey, exitUrl }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(payloadUrl)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<TestPayload>;
-      })
+    fetchPayload(payloadUrl)
       .then(setPayload)
       .catch((e: Error) => setError(e.message));
   }, [payloadUrl]);

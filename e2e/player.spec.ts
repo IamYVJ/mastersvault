@@ -115,3 +115,11 @@ test('question text cannot be selected, copied or right-clicked', async ({ page 
   );
   expect(blocked).toEqual([true, true]);
 });
+
+test('test data is not published as readable text', async ({ request }) => {
+  const packed = await request.get('data/gmat/practice/quant-sampler.bin');
+  expect(packed.ok()).toBe(true);
+  const text = (await packed.body()).toString('latin1');
+  for (const word of ['ps-0001', 'explanation', 'questions']) expect(text).not.toContain(word);
+  expect((await request.get('data/gmat/practice/quant-sampler.json')).status()).toBe(404);
+});
