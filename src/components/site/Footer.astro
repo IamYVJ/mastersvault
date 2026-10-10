@@ -18,8 +18,42 @@ import { url } from '../../lib/url';
         <a href={SITE.codeLicense.url}>{SITE.codeLicense.name}</a>
       </p>
     </div>
+    <p class="visitor-counter" hidden>
+      <span id="visitor-count" class="visitor-count">—</span> visitors
+    </p>
   </div>
 </footer>
+
+<script>
+  import { url } from '../../lib/url';
+
+  // Decorative visitor footnote. It stays hidden on every failure: an ad blocker, no connection,
+  // or no views recorded yet.
+  const box = document.querySelector<HTMLElement>('.visitor-counter');
+  const out = document.getElementById('visitor-count');
+  // The endpoint is read off the beacon tag (see Base.astro), so the address lives in one place.
+  const endpoint = document.querySelector<HTMLElement>('script[data-goatcounter]')?.dataset.goatcounter;
+
+  // Every page shows the home page's count, so the number is the same across the site. Never
+  // /counter/TOTAL.json: the GoatCounter site is shared, and that would add up other projects too.
+  const path = url('/');
+  // A fixed date before the first pageview. All-time is already the default, so this doesn't change
+  // the count. It gives the response its own cache key, apart from a "no data yet" reply cached earlier.
+  const START = '2026-01-01';
+
+  if (box && out && endpoint) {
+    fetch(`${endpoint.replace(/\/count$/, '')}/counter/${encodeURIComponent(path)}.json?start=${START}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('bad status'))))
+      .then((data) => {
+        // `count` is already a formatted string, so it's shown as it is.
+        if (data?.count != null) {
+          out.textContent = String(data.count);
+          box.hidden = false;
+        }
+      })
+      .catch(() => {});
+  }
+</script>
 
 <style>
   .site-footer {
@@ -49,5 +83,17 @@ import { url } from '../../lib/url';
   }
   .license {
     margin: 0;
+  }
+  /* No `display` here: it would override the `hidden` attribute and show a bare "— visitors"
+     to anyone whose ad blocker blocks the counter. */
+  .visitor-counter {
+    margin: 20px 0 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--text-subtle);
+  }
+  .visitor-count {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
   }
 </style>

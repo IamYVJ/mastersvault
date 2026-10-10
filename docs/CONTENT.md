@@ -143,7 +143,7 @@ questions: [ps-0003, ps-0007, ...]
 
 ### The mock recipe
 
-Mocks 1–8 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
+Mocks 1–10 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
 
 | Section | Questions | Difficulty 1 | 2 | 3 | 4 | 5 |
 |---|---|---:|---:|---:|---:|---:|
@@ -161,7 +161,7 @@ Check a finished mock with `npm run verify -- --balance`, which prints each sect
 
 ### Practice set levels
 
-Besides the samplers and the topic sets, each section has a **Foundation** set (difficulty 1–2, for building accuracy before speed) and a **Challenge** set (difficulty 4–5). Their questions aren't used in any mock.
+Besides the samplers and the topic sets, each section has three level sets: a **Foundation** set (difficulty 1–2, for building accuracy before speed), an **Intermediate** set (mostly difficulty 3, with a few questions at 2 and 4, like the middle of a mock) and a **Challenge** set (difficulty 4–5). Their questions aren't used in any mock. In each section's list they are ordered sampler, foundation, topic sets, intermediate, challenge.
 
 ## Revision notes
 

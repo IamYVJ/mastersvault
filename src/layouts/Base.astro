@@ -96,5 +96,8 @@ const structured = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
         </>
       )
     }
+    {/* GoatCounter pageview beacon. One GoatCounter site is shared across projects on purpose:
+        counts are kept per path, and this site's paths all start with its own base. */}
+    <script is:inline data-goatcounter="https://yvj.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   </body>
 </html>

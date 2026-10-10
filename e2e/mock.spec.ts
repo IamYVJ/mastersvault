@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('Mock 1 runs with the exam rules: section order, answer to advance, no going back, review & edit', async ({ page }) => {
   await page.goto('gmat/mocks/');
-  await page.getByRole('link', { name: /^Mock Test 1/ }).click();
+  await page.getByRole('link', { name: /^Mock Test 1\b/ }).click();
   await expect(page.getByRole('cell', { name: 'Quantitative Reasoning' })).toBeVisible();
   await page.getByRole('link', { name: /^Start/ }).click();
 
