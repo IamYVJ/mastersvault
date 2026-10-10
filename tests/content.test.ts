@@ -24,10 +24,10 @@ describe('real content', () => {
     expect(quant.sections[0].timeMinutes).toBe(11); // 5 questions at the section's 45/21 pace, rounded up
   });
 
-  it('lists practice sets by order, samplers first', () => {
+  it('lists practice sets by order: sampler, foundation, topic sets, challenge', () => {
     const exam = getExam('gmat');
     const quant = exam.practice.filter((t) => t.sections[0].id === 'quant').map((t) => t.id);
-    expect(quant).toEqual(['quant-sampler', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems']);
+    expect(quant).toEqual(['quant-sampler', 'quant-foundation', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems', 'quant-challenge']);
   });
 
   it('keeps practice sets free of mock questions and of each other', () => {

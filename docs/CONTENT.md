@@ -141,7 +141,27 @@ order: 2
 questions: [ps-0003, ps-0007, ...]
 ```
 
-**Building a mock:** mix difficulty roughly evenly across 2–4, with a few 1s and 5s. Spread topics, and put Reading Comprehension passages at varied points in the Verbal section. Run `npm run coverage` to find gaps and unused questions.
+### The mock recipe
+
+Mocks 1–8 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
+
+| Section | Questions | Difficulty 1 | 2 | 3 | 4 | 5 |
+|---|---|---:|---:|---:|---:|---:|
+| Quant (21) | 21 Problem Solving, with every one of the 14 topics at least once | 2 | 4–5 | 7–8 | 5 | 2 |
+| Verbal (23) | 10 Critical Reasoning + 13 Reading Comprehension | 0 | 4 | 8–9 | 8–9 | 2 |
+| Data Insights (20) | 7 Data Sufficiency, 3 Multi-Source, 3 Table, 3 Graphics, 4 Two-Part | 0 | 1 | 9–10 | 7–8 | 2 |
+
+- **Quant:** start with easier questions and end with harder ones, but don't sort strictly by difficulty.
+- **Verbal:** the 10 Critical Reasoning questions cover all 8 argument tasks (two tasks appear twice). The 13 Reading Comprehension questions sit on 4 new passages, three with 3 questions and one with 4. Alternate blocks: one to three Critical Reasoning questions, then a passage.
+- **Data Insights:** the 3 Multi-Source questions share one new source set and sit together in positions 7–9. One of the 4 Two-Part questions is verbal (logic), not numerical. The usual order of types is DS, TA, GI, DS, TPA, DS, MSR ×3, GI, DS, TPA, TA, DS, TPA, GI, DS, TA, TPA, DS.
+- **Answer letters:** in Quant and Verbal each of A–E is the answer 4 or 5 times. Across the Data Sufficiency and multiple-choice Multi-Source questions, no letter is the answer more than 3 times.
+- **No reuse:** every question, passage and source set in a mock is new, and appears in no other mock or practice set.
+
+Check a finished mock with `node scripts/verify/balance.mjs`, which prints each section's answer-letter and difficulty counts, and run `npm run coverage` to find topic gaps and unused questions.
+
+### Practice set levels
+
+Besides the samplers and the topic sets, each section has a **Foundation** set (difficulty 1–2, for building accuracy before speed) and a **Challenge** set (difficulty 4–5). Their questions aren't used in any mock.
 
 ## Revision notes
 

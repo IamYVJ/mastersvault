@@ -4,7 +4,7 @@ Free, open-source practice for graduate admissions tests: full-length mocks, sec
 
 > GMAT™ is a registered trademark of the Graduate Management Admission Council (GMAC). MastersVault is an independent project and is not affiliated with, endorsed by, or sponsored by GMAC or any other test maker. All questions are original.
 
-**Status:** the GMAT content (6 mocks, 12 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them.
+**Status:** the GMAT content (8 mocks, 18 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them.
 
 ## Layout
 
