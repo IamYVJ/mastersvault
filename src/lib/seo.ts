@@ -49,7 +49,7 @@ export function learningResourceData(
     about: resource.about,
     inLanguage: 'en',
     isAccessibleForFree: true,
-    license: SITE.contentLicense.url,
+    license: absolute(site, SITE.contentTermsPath),
     ...(resource.minutes ? { timeRequired: `PT${resource.minutes}M` } : {}),
     publisher,
   };

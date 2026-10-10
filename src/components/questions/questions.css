@@ -11,6 +11,22 @@
   user-select: none;
   -webkit-touch-callout: none;
 }
+.q-rights {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.q-print-note {
+  display: none;
+}
+@media print {
+  .q-view.is-guarded > * {
+    display: none !important;
+  }
+  .q-view.is-guarded > .q-print-note {
+    display: block !important;
+  }
+}
 
 /* ---------------------------------------------------------------- layout */
 .q-single .q-main {

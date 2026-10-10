@@ -116,10 +116,32 @@ test('question text cannot be selected, copied or right-clicked', async ({ page 
   expect(blocked).toEqual([true, true]);
 });
 
-test('test data is not published as readable text', async ({ request }) => {
-  const packed = await request.get('data/gmat/practice/quant-sampler.bin');
+test('test data is not published as readable text', async ({ page, request }) => {
+  // The address includes a key that changes with every deploy, so read it from the page.
+  await page.goto('gmat/practice/quant-sampler/');
+  const address = await page.locator('.start').getAttribute('data-data');
+  expect(address).toMatch(/\/data\/gmat\/practice\/quant-sampler\.[a-z0-9]+\.bin$/);
+
+  const packed = await request.get(address!);
   expect(packed.ok()).toBe(true);
   const text = (await packed.body()).toString('latin1');
   for (const word of ['ps-0001', 'explanation', 'questions']) expect(text).not.toContain(word);
-  expect((await request.get('data/gmat/practice/quant-sampler.json')).status()).toBe(404);
+  for (const old of ['quant-sampler.json', 'quant-sampler.bin']) expect((await request.get(`data/gmat/practice/${old}`)).status()).toBe(404);
+});
+
+test('printing a question shows a notice in its place', async ({ page }) => {
+  await start(page, 'quant-sampler');
+  await expect(page.locator('.q-rights')).toHaveText(/© 2026 MastersVault · All rights reserved/);
+  await expect(page.locator('.q-print-note')).toBeHidden();
+
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.q-main')).toBeHidden();
+  await expect(page.locator('.q-print-note')).toBeVisible();
+  await page.emulateMedia({ media: 'screen' });
+
+  // Ctrl+P and Ctrl+S are switched off while a question is on screen.
+  const blocked = await page.evaluate(() =>
+    ['p', 's'].map((key) => !document.body.dispatchEvent(new KeyboardEvent('keydown', { key, ctrlKey: true, bubbles: true, cancelable: true }))),
+  );
+  expect(blocked).toEqual([true, true]);
 });

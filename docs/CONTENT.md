@@ -157,7 +157,7 @@ Mocks 1–8 all follow the same recipe, so that scores are comparable from one m
 - **Answer letters:** in Quant and Verbal each of A–E is the answer 4 or 5 times. Across the Data Sufficiency and multiple-choice Multi-Source questions, no letter is the answer more than 3 times.
 - **No reuse:** every question, passage and source set in a mock is new, and appears in no other mock or practice set.
 
-Check a finished mock with `node scripts/verify/balance.mjs`, which prints each section's answer-letter and difficulty counts, and run `npm run coverage` to find topic gaps and unused questions.
+Check a finished mock with `npm run verify -- --balance`, which prints each section's answer-letter and difficulty counts, and run `npm run coverage` to find topic gaps and unused questions. The answer checks that `npm run verify` runs are kept with the content, in `<exam>/verify/`; add a check there for every new question whose answer can be calculated.
 
 ### Practice set levels
 

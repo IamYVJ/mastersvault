@@ -1,4 +1,5 @@
 // Names and links the browser-side dashboard needs, built at compile time.
+import { dataPath } from './data-path.ts';
 import { getExams } from './index.ts';
 import { noteHref, notesByTopic } from './revision.ts';
 
@@ -16,7 +17,7 @@ export function buildCatalog(url: (path: string) => string) {
         tests[`${exam.id}/${kind}/${t.id}`] = {
           title: t.title,
           href: url(`/${exam.id}/${kind}/${t.id}/`),
-          dataUrl: url(`/data/${exam.id}/${kind}/${t.id}.bin`),
+          dataUrl: url(dataPath(exam.id, kind, t.id)),
         };
     }
 

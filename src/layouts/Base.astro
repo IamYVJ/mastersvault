@@ -39,7 +39,10 @@ const structured = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <link rel="manifest" href={url('/manifest.webmanifest')} />
     <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)" />
-    {noindex ? <meta name="robots" content="noindex" /> : <link rel="sitemap" href={url('/sitemap.xml')} />}
+    {/* "noai" and the TDM reservation ask crawlers not to use the content for AI training or data mining. */}
+    <meta name="robots" content={noindex ? 'noindex, noai, noimageai' : 'noai, noimageai'} />
+    <meta name="tdm-reservation" content="1" />
+    {!noindex && <link rel="sitemap" href={url('/sitemap.xml')} />}
 
     {/* Link previews on social media and in messaging apps */}
     <meta property="og:site_name" content={SITE.name} />

@@ -8,7 +8,7 @@ import { url } from '../lib/url';
   <div class="container page prose">
     <h1>About {SITE.name}</h1>
     <p>
-      {SITE.name} is a free, open-source practice site for graduate admissions tests. It offers full-length mock
+      {SITE.name} is a free practice site for graduate admissions tests. It offers full-length mock
       tests, shorter section practice and revision notes, all delivered on a test screen that works like the real
       exam's. That way, the timer, the navigation rules and the question formats won't surprise you on test day.
     </p>
@@ -26,14 +26,16 @@ import { url } from '../lib/url';
       Corrections are very welcome.
     </p>
 
-    <h2>Licences</h2>
+    <h2 id="licences">Copyright and licences</h2>
     <p>
-      © 2026 the {SITE.name} contributors. The questions, passages, explanations and notes are licensed under <a
-        href={SITE.contentLicense.url}>{SITE.contentLicense.name}</a
-      >: you may share and adapt them for non-commercial purposes, with credit, under the same licence. The site's
-      code is licensed under <a href={SITE.codeLicense.url}>{SITE.codeLicense.name}</a>, and its source is on <a
-        href={SITE.repo}>GitHub</a
-      >.
+      © 2026 the {SITE.name} contributors. {SITE.contentRights}. The questions, passages, explanations and notes are
+      free to use on this site for your own study. Without written permission, you may not copy, republish,
+      redistribute, sell or adapt them, collect them with automated tools, or use them to train or test
+      machine-learning models. To ask for permission, open an issue on <a href={SITE.repo}>GitHub</a>.
+    </p>
+    <p>
+      The site's code is open source. It's licensed under <a href={SITE.codeLicense.url}>{SITE.codeLicense.name}</a
+      >, and its source is on <a href={SITE.repo}>GitHub</a>.
     </p>
     <p>
       The site is built with open-source software, including Astro, React and KaTeX, and is set in IBM Plex Mono.

@@ -6,8 +6,9 @@
 // single column.
 import 'katex/dist/katex.min.css';
 import './questions.css';
-import type { ReactNode, SyntheticEvent } from 'react';
+import { useEffect, type ReactNode, type SyntheticEvent } from 'react';
 import type { RenderedPassage, RenderedQuestion, RenderedSourceSet, ResponseValue } from '../../lib/content/types.ts';
+import { SITE } from '../../lib/site.ts';
 import Chart from './Chart.tsx';
 import DataTable from './DataTable.tsx';
 import { ChoiceList, DichotomousGrid, DropdownStatements, TwoPartGrid } from './Responses.tsx';
@@ -35,6 +36,18 @@ const blockMenu = (e: SyntheticEvent) => {
 };
 const guard = { onCopy: block, onCut: block, onDragStart: block, onContextMenu: blockMenu };
 
+/** Switches off the print and save-page shortcuts while a question is on screen. */
+function useBlockPrintAndSave(on: boolean) {
+  useEffect(() => {
+    if (!on) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && ['p', 's'].includes(e.key.toLowerCase())) e.preventDefault();
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [on]);
+}
+
 export default function QuestionView({
   question: q,
   passage,
@@ -49,6 +62,10 @@ export default function QuestionView({
   const spec = q.response;
   const props = { value: response, onChange, reveal, name };
   const root = copyable ? { className: 'q-view' } : { className: 'q-view is-guarded', ...guard };
+  useBlockPrintAndSave(!copyable);
+  const rights = `© 2026 ${SITE.name} · ${SITE.contentRights}`;
+  // Printing shows this in place of the question (see questions.css).
+  const printNote = copyable ? null : <p className="q-print-note">Questions can't be printed. {rights}.</p>;
 
   const answer =
     spec.kind === 'choice' ? (
@@ -81,6 +98,7 @@ export default function QuestionView({
           {explanationFooter}
         </section>
       )}
+      {!copyable && <p className="q-rights">{rights}</p>}
     </div>
   );
 
@@ -97,12 +115,14 @@ export default function QuestionView({
           {stimulus.kind === 'sources' && sources && <SourceTabs sources={sources} />}
         </div>
         {main}
+        {printNote}
       </div>
     );
   }
   return (
     <div {...root} className={`${root.className} q-single`}>
       {main}
+      {printNote}
     </div>
   );
 }

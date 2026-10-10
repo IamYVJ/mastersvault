@@ -13,7 +13,7 @@ import {
   reduce,
   rulesFor,
 } from '../../lib/engine/attempt.ts';
-import { fetchPayload } from '../../lib/engine/codec.ts';
+import { fetchPayload, OutdatedPageError } from '../../lib/engine/codec.ts';
 import { clearAttempt, loadAttempt, recordAttempt, saveAttempt } from '../../lib/engine/storage.ts';
 import Calculator from './Calculator.tsx';
 import type { PlayerProps, ToolBar } from './context.ts';
@@ -34,19 +34,31 @@ interface Props {
 
 export default function TestPlayer({ payloadUrl, testKey, exitUrl }: Props) {
   const [payload, setPayload] = useState<TestPayload | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; outdated: boolean } | null>(null);
 
   useEffect(() => {
     fetchPayload(payloadUrl)
       .then(setPayload)
-      .catch((e: Error) => setError(e.message));
+      .catch((e: Error) => setError({ message: e.message, outdated: e instanceof OutdatedPageError }));
   }, [payloadUrl]);
 
+  if (error?.outdated)
+    return (
+      <div className="player-message">
+        <h1>This page is out of date</h1>
+        <p>{error.message} Your answers so far are saved.</p>
+        <p>
+          <button type="button" className="btn" onClick={() => location.reload()}>
+            Reload
+          </button>
+        </p>
+      </div>
+    );
   if (error)
     return (
       <div className="player-message">
         <h1>The test couldn't be loaded</h1>
-        <p>Check your connection and try again. ({error})</p>
+        <p>Check your connection and try again. ({error.message})</p>
         <p>
           <a className="btn" href={exitUrl}>
             Back

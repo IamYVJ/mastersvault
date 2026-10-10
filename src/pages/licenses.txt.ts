@@ -29,7 +29,8 @@ export const GET: APIRoute = () => {
   });
   const intro =
     `${SITE.name} includes the open-source software listed below. Each is the work of its own authors\n` +
-    `and is used under the licence shown. ${SITE.name}'s own code and content are licensed separately:\n` +
-    `${SITE.codeLicense.name} (code) and ${SITE.contentLicense.name} (questions and notes). See ${SITE.repo}\n`;
+    `and is used under the licence shown. ${SITE.name}'s own code is licensed under ${SITE.codeLicense.name}\n` +
+    `(see ${SITE.repo}). Its questions and notes are copyright of the ${SITE.name} contributors.\n` +
+    `${SITE.contentRights}.\n`;
   return new Response(`${intro}\n${parts.join('\n')}`, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

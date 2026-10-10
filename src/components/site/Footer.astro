@@ -14,7 +14,7 @@ import { url } from '../../lib/url';
         <a href={SITE.repo}>Source on GitHub</a>
       </nav>
       <p class="license">
-        © 2026 {SITE.name} contributors · Questions and notes: <a href={SITE.contentLicense.url}>{SITE.contentLicense.name}</a> · Code:{' '}
+        © 2026 {SITE.name} contributors · Questions and notes: <a href={url(SITE.contentTermsPath)}>{SITE.contentRights.toLowerCase()}</a> · Code:{' '}
         <a href={SITE.codeLicense.url}>{SITE.codeLicense.name}</a>
       </p>
     </div>

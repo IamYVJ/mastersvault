@@ -7,12 +7,18 @@ const payload = buildTestPayload(exam, exam.mocks[0]!);
 
 describe('packed test data', () => {
   it('unpacks to exactly what was packed', async () => {
-    expect(await unpackPayload(await packPayload(payload))).toEqual(payload);
+    expect(await unpackPayload(await packPayload(payload, 'k3y'), 'k3y')).toEqual(payload);
+  });
+
+  it('does not unpack with a different key', async () => {
+    const packed = await packPayload(payload, 'k3y');
+    expect(Buffer.from(packed).equals(Buffer.from(await packPayload(payload, 'other')))).toBe(false);
+    await expect(unpackPayload(packed, 'other')).rejects.toThrow();
   });
 
   it('is smaller than the JSON and not readable as text', async () => {
     const json = JSON.stringify(payload);
-    const packed = await packPayload(payload);
+    const packed = await packPayload(payload, 'k3y');
     expect(packed.length).toBeLessThan(json.length / 2);
 
     const text = Buffer.from(packed).toString('latin1');
@@ -20,7 +26,7 @@ describe('packed test data', () => {
   });
 
   it('does not unpack as plain compressed data', async () => {
-    const packed = await packPayload(payload);
+    const packed = await packPayload(payload, 'k3y');
     const inflate = new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
     await expect(inflate).rejects.toThrow();
   });

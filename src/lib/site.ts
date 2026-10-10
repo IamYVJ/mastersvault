@@ -5,7 +5,9 @@ export const SITE = {
   description:
     'Free, original practice for the GMAT: full-length mock tests, section practice sets and revision notes, on a test screen that works like the real exam. Unofficial and not affiliated with GMAC.',
   repo: 'https://github.com/IamYVJ/mastersvault',
-  contentLicense: { name: 'CC BY-NC-SA 4.0', url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' },
+  /** The questions and notes aren't openly licensed. The full terms are on the About page. */
+  contentRights: 'All rights reserved',
+  contentTermsPath: '/about/#licences',
   codeLicense: { name: 'AGPL-3.0', url: 'https://www.gnu.org/licenses/agpl-3.0.html' },
 };
 

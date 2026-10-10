@@ -2,6 +2,7 @@
 // The full-screen test player for a practice set. It runs entirely in the browser.
 import Base from '../../../../layouts/Base.astro';
 import TestPlayer from '../../../../components/player/TestPlayer.tsx';
+import { dataPath } from '../../../../lib/content/data-path.ts';
 import { getExam, listExamIds } from '../../../../lib/content/index.ts';
 import { url } from '../../../../lib/url';
 
@@ -16,7 +17,7 @@ const test = getExam(exam).practice.find((t) => t.id === id)!;
 <Base title={test.title} bare noindex>
   <TestPlayer
     client:only="react"
-    payloadUrl={url(`/data/${exam}/practice/${id}.bin`)}
+    payloadUrl={url(dataPath(exam, 'practice', id))}
     testKey={`${exam}/practice/${id}`}
     exitUrl={url(`/${exam}/practice/${id}/`)}
   >

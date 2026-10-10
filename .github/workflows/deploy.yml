@@ -43,6 +43,9 @@ jobs:
         run: npm test
       - name: Type check
         run: npm run check
+      # The test data files are masked with this key, and it becomes part of their names.
+      - name: Pick a new key for the test data
+        run: echo "DATA_KEY=$(openssl rand -hex 6)" >> "$GITHUB_ENV"
       - name: Build site
         run: npm run build
       - name: Install Playwright browser
