@@ -26,7 +26,8 @@ if (process.argv.includes('--balance')) {
 const scripts = dirs.flatMap((dir) =>
   fs
     .readdirSync(dir)
-    .filter((f) => f.endsWith('.mjs') && !f.endsWith('.part.mjs') && f !== BALANCE)
+    // Files whose names start with "_" are helpers shared by the checks, not checks themselves.
+    .filter((f) => f.endsWith('.mjs') && !f.endsWith('.part.mjs') && !f.startsWith('_') && f !== BALANCE)
     .sort()
     .map((f) => path.join(dir, f)),
 );
