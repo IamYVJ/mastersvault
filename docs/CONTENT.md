@@ -145,6 +145,8 @@ questions: [ps-0003, ps-0007, ...]
 
 Mocks 1–12 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
 
+Mocks 13 and 14 are **hard mocks**: the same recipe in every respect except difficulty, with each question one level harder than its slot in the table below (capped at 5). Their titles say "(hard)", and their scores will read lower than on the standard mocks.
+
 | Section | Questions | Difficulty 1 | 2 | 3 | 4 | 5 |
 |---|---|---:|---:|---:|---:|---:|
 | Quant (21) | 21 Problem Solving, with every one of the 14 topics at least once | 2 | 4–5 | 7–8 | 5 | 2 |
