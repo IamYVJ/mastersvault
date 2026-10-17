@@ -10,7 +10,8 @@ describe('real content', () => {
   it('has no validation errors', () => {
     const { issues } = checkContent();
     expect(issues.filter((i) => i.level === 'error')).toEqual([]);
-  });
+    // Validating every question takes several seconds, more than the default timeout.
+  }, 60_000);
 
   it('compiles answers to indices', () => {
     const exam = getExam('gmat');
@@ -27,7 +28,7 @@ describe('real content', () => {
   it('lists practice sets by order: sampler, foundation, topic sets, intermediate, challenge, mixed sets', () => {
     const exam = getExam('gmat');
     const quant = exam.practice.filter((t) => t.sections[0].id === 'quant').map((t) => t.id);
-    expect(quant).toEqual(['quant-sampler', 'quant-foundation', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems', 'quant-intermediate', 'quant-challenge', 'quant-mixed-1', 'quant-mixed-2']);
+    expect(quant).toEqual(['quant-sampler', 'quant-foundation', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems', 'quant-intermediate', 'quant-challenge', 'quant-challenge-2', 'quant-challenge-3', 'quant-mixed-1', 'quant-mixed-2']);
   });
 
   it('keeps practice sets free of mock questions and of each other', () => {
