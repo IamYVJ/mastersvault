@@ -143,9 +143,9 @@ questions: [ps-0003, ps-0007, ...]
 
 ### The mock recipe
 
-Mocks 1–12 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
+Mocks 1–12, 15 and 16 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
 
-Mocks 13 and 14 are **hard mocks**: the same recipe in every respect except difficulty, with each question one level harder than its slot in the table below (capped at 5). Their titles say "(hard)", and their scores will read lower than on the standard mocks.
+Mocks 13, 14, 17 and 18 are **hard mocks**: the same recipe in every respect except difficulty, with each question one level harder than its slot in the table below (capped at 5). Their titles say "(hard)", and their scores will read lower than on the standard mocks. Mocks 19 and 20 are **very hard mocks**, with each question two levels harder than its slot (capped at 5), so almost every question is at difficulty 5; their titles say "(very hard)".
 
 | Section | Questions | Difficulty 1 | 2 | 3 | 4 | 5 |
 |---|---|---:|---:|---:|---:|---:|
@@ -163,7 +163,7 @@ Check a finished mock with `npm run verify -- --balance`, which prints each sect
 
 ### Practice set levels
 
-Besides the samplers and the topic sets, each section has three level sets: a **Foundation** set (difficulty 1–2, for building accuracy before speed), an **Intermediate** set (mostly difficulty 3, with a few questions at 2 and 4, like the middle of a mock) and **Challenge** sets (difficulty 4–5; challenge sets 2 and 3 are harder on average than the first, and sets 4 and 5 are mostly difficulty 5). Their questions aren't used in any mock. In each section's list they are ordered sampler, foundation, topic sets, intermediate, challenge.
+Besides the samplers and the topic sets, each section has three level sets: a **Foundation** set (difficulty 1–2, for building accuracy before speed), an **Intermediate** set (mostly difficulty 3, with a few questions at 2 and 4, like the middle of a mock) and **Challenge** sets (difficulty 4–5; challenge sets 2 and 3 are harder on average than the first, and sets 4 to 7 are mostly difficulty 5). Their questions aren't used in any mock. In each section's list they are ordered sampler, foundation, topic sets, intermediate, challenge.
 
 Each section also has **mixed sets**, numbered 1, 2 and so on. A mixed set covers every topic or question type in the section and runs from easy to hard in about the proportions of a mock section, so it works as a short timed section. Mixed sets come last in each section's list, and their questions aren't used in any mock.
 

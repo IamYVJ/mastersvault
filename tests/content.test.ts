@@ -28,7 +28,7 @@ describe('real content', () => {
   it('lists practice sets by order: sampler, foundation, topic sets, intermediate, challenge, mixed sets', () => {
     const exam = getExam('gmat');
     const quant = exam.practice.filter((t) => t.sections[0].id === 'quant').map((t) => t.id);
-    expect(quant).toEqual(['quant-sampler', 'quant-foundation', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems', 'quant-intermediate', 'quant-challenge', 'quant-challenge-2', 'quant-challenge-3', 'quant-challenge-4', 'quant-challenge-5', 'quant-mixed-1', 'quant-mixed-2']);
+    expect(quant).toEqual(['quant-sampler', 'quant-foundation', 'quant-arithmetic', 'quant-algebra', 'quant-word-problems', 'quant-intermediate', 'quant-challenge', 'quant-challenge-2', 'quant-challenge-3', 'quant-challenge-4', 'quant-challenge-5', 'quant-challenge-6', 'quant-challenge-7', 'quant-mixed-1', 'quant-mixed-2']);
   });
 
   it('keeps practice sets free of mock questions and of each other', () => {
