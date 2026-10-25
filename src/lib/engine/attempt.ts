@@ -7,6 +7,7 @@
 // throttling. Time while the page is closed is not counted: on resume, clocks
 // stop at the last saved tick and restart when the test taker continues.
 import type { ResponseValue, TestPayload } from '../content/types.ts';
+import { nextQuestions, seedFor } from './adaptive.ts';
 import { isComplete } from './grading.ts';
 
 export interface Settings {
@@ -33,6 +34,7 @@ export type Alert = { kind: 'time-up'; section: string } | { kind: 'five-minutes
 
 export interface SectionState {
   id: string;
+  /** In an adaptive section, the questions served so far: it grows as the test goes. */
   questionIds: string[];
   limitMs: number | null;
   elapsedMs: number;
@@ -105,12 +107,15 @@ export const FIVE_MINUTES = 5 * 60_000;
 export function rulesFor(payload: TestPayload, settings: Settings): Rules {
   const r = payload.exam.rules;
   if (payload.test.kind === 'mock') {
+    // An adaptive mock chooses each question from the answers before it, so every question must be
+    // answered before the next, and there is no going back (review & edit at the end is still allowed).
+    const adaptive = payload.test.adaptive === true;
     return {
       timed: true,
       explanations: 'end',
       sectionOrder: payload.sections.length > 1 ? r.sectionOrder : 'fixed',
-      requireAnswer: r.requireAnswerToAdvance,
-      allowBack: r.allowBackNavigation,
+      requireAnswer: adaptive || r.requireAnswerToAdvance,
+      allowBack: !adaptive && r.allowBackNavigation,
       bookmarks: r.bookmarks,
       review: r.reviewAndEdit.enabled,
       maxChanges: r.reviewAndEdit.enabled ? r.reviewAndEdit.maxAnswerChanges : 0,
@@ -136,7 +141,7 @@ export function createAttempt(payload: TestPayload, testKey: string, now: number
   for (const s of payload.sections) {
     sections[s.id] = {
       id: s.id,
-      questionIds: s.questionIds,
+      questionIds: s.adaptive ? [] : [...s.questionIds],
       limitMs: s.timeMinutes * 60_000,
       elapsedMs: 0,
       runningSince: null,
@@ -268,6 +273,7 @@ export function reduce(state: Attempt, action: Action, payload: TestPayload): At
       if (a.phase !== 'section-intro' || !sec) break;
       sec.status = 'active';
       sec.runningSince = now;
+      if (!sec.questionIds.length) serveNext(a, payload);
       a.phase = 'question';
       break;
     }
@@ -289,7 +295,7 @@ export function reduce(state: Attempt, action: Action, payload: TestPayload): At
       if (a.phase !== 'question' || !sec) break;
       const qid = sec.questionIds[sec.index];
       if (rules.requireAnswer && !isComplete(spec(qid), sec.responses[qid] ?? null)) break;
-      if (sec.index < sec.questionIds.length - 1) {
+      if (sec.index < sec.questionIds.length - 1 || serveNext(a, payload)) {
         sec.index += 1;
         sec.furthest = Math.max(sec.furthest, sec.index);
       } else if (rules.review) {
@@ -366,6 +372,8 @@ export function reduce(state: Attempt, action: Action, payload: TestPayload): At
       if (remaining === 0) {
         sec.elapsedMs = sec.limitMs;
         a.alert = { kind: 'time-up', section: sec.id };
+        // Questions an adaptive section never reached are served now, unanswered, so that they count.
+        while (serveNext(a, payload));
         finishSection(a, rules, now, 'time');
       } else if (remaining <= FIVE_MINUTES && !sec.warned && sec.limitMs > FIVE_MINUTES) {
         sec.warned = true;
@@ -392,6 +400,16 @@ export function reduce(state: Attempt, action: Action, payload: TestPayload): At
 }
 
 // ------------------------------------------------------------------ helpers
+
+/** Adaptive sections: appends the next question (or block) to the current section. False once it is complete. */
+function serveNext(a: Attempt, payload: TestPayload): boolean {
+  const sec = currentSection(a);
+  const plan = payload.sections.find((s) => s.id === sec?.id)?.adaptive;
+  if (!sec || !plan) return false;
+  const next = nextQuestions(payload, plan, sec.questionIds, sec.responses, seedFor(a.id, sec.id));
+  sec.questionIds.push(...next);
+  return next.length > 0;
+}
 
 /** Adds time elapsed since the last action to the running clocks. */
 function settle(a: Attempt, now: number) {

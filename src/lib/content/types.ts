@@ -63,6 +63,18 @@ export interface RenderedSourceSet {
  */
 export type ResponseValue = number | (number | null)[] | null;
 
+/** One position in an adaptive section: a single question of a type, or a block sharing a passage or source set. */
+export type AdaptiveSlot =
+  | { kind: 'single'; type: QuestionType }
+  | { kind: 'group'; stimulus: 'passage' | 'sources'; size: number };
+
+/** How an adaptive section is served: `length` questions, slot by slot, chosen from `pool` as the test goes. */
+export interface AdaptivePlan {
+  length: number;
+  slots: AdaptiveSlot[];
+  pool: string[];
+}
+
 export interface PayloadSection {
   id: string;
   name: string;
@@ -70,7 +82,9 @@ export interface PayloadSection {
   timeMinutes: number;
   tools: Tool[];
   score: { min: number; max: number };
+  /** Fixed tests: the questions in order. Adaptive sections: empty, the attempt records what was served. */
   questionIds: string[];
+  adaptive?: AdaptivePlan;
 }
 
 export interface TestPayload {
@@ -83,7 +97,7 @@ export interface TestPayload {
     rules: ExamConfig['rules'];
     totalScore: ExamConfig['totalScore'];
   };
-  test: { id: string; kind: 'mock' | 'practice'; title: string; description?: string };
+  test: { id: string; kind: 'mock' | 'practice'; title: string; description?: string; adaptive?: boolean };
   sections: PayloadSection[];
   topics: Record<string, string>;
   questions: Record<string, RenderedQuestion>;

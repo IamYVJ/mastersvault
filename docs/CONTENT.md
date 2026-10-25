@@ -161,6 +161,27 @@ Mocks 13, 14, 17 and 18 are **hard mocks**: the same recipe in every respect exc
 
 Check a finished mock with `npm run verify -- --balance`, which prints each section's answer-letter and difficulty counts, and run `npm run coverage` to find topic gaps and unused questions. The answer checks that `npm run verify` runs are kept with the content, in `<exam>/verify/`; add a check there for every new question whose answer can be calculated.
 
+### Adaptive mocks
+
+An **adaptive mock** (`tests/adaptive/01.yaml`, shown on the site as `adaptive-01`) works like the real exam: instead of a fixed list, each section has a **pool**, and the test engine chooses each question from the pool as the test goes, based on the answers so far. A test taker still answers the section's usual number of questions (21, 23 and 20) in the usual time.
+
+```yaml
+title: Adaptive Mock 1
+description: Optional one-liner.
+sections:
+  quant: [ps-0636, ps-0637, ...]          # the pool
+  verbal: [cr-0322, ..., rc-0344, ...]    # a passage's questions listed together
+  data-insights: [ds-0214, ...]
+```
+
+**The plan.** The order of question types in an adaptive section is fixed in `exam.yaml`, under each section's `adaptive.slots`: `{ type: problem-solving, count: 21 }` is 21 single questions; `{ passage: 3 }` is a Reading Comprehension passage with 3 questions; `{ sources: 3 }` is a Multi-Source set with 3 questions. The slots must add up to the section's `questionCount`. The plans follow the mock recipe: Quant is 21 Problem Solving; Verbal is CR, a 3-question passage, CR ×2, a 4-question passage, CR ×3, a 3-question passage, CR ×2, a 3-question passage, CR ×2; Data Insights is DS, TA, GI, DS, TPA, DS, a 3-question source set, GI, DS, TPA, TA, DS, TPA, GI, DS, TA, TPA, DS.
+
+**How a question is chosen** (`src/lib/engine/adaptive.ts`). Before each slot, the engine estimates ability from the answers so far, with the same model as the score estimate, and turns it into a target difficulty: 3 at the start, rising after right answers and falling after wrong ones. A single slot gets the unused pool question of that type whose difficulty is closest to the target, preferring one whose topic the section hasn't shown yet. A passage or source-set slot gets the whole unused block whose questions' average difficulty is closest, with its questions in the order the pool lists them. Near-ties are broken by a number seeded from the attempt, so two attempts see different questions, but reopening an attempt always shows the same ones. Every question must be answered before the next, there is no going back, and review & edit at the end of a section changes answers (and so the score) but not which questions were served. If time runs out, the questions not reached are served unanswered and count as incorrect.
+
+**The pool.** A pool must be able to fill every slot of its section's plan. The more questions it has at each difficulty, the closer each served question can be to the target; when a difficulty runs out, the engine takes the nearest one.
+
+`npm run validate` checks that a pool can fill its section's plan: enough single questions of each type, and enough passages or source sets of each block size. Every question of a passage or source set that is in the pool counts toward one block, so the pool must hold all of a block's questions and no others. It warns when a type has fewer than twice as many questions as slots, which leaves the engine little choice. As with fixed mocks, no pool question may appear in any other mock, adaptive or not.
+
 ### Practice set levels
 
 Besides the samplers and the topic sets, each section has three level sets: a **Foundation** set (difficulty 1–2, for building accuracy before speed), an **Intermediate** set (mostly difficulty 3, with a few questions at 2 and 4, like the middle of a mock) and **Challenge** sets (difficulty 4–5; challenge sets 2 and 3 are harder on average than the first, and sets 4 to 7 are mostly difficulty 5). Their questions aren't used in any mock. In each section's list they are ordered sampler, foundation, topic sets, intermediate, challenge.

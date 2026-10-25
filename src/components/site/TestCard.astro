@@ -8,12 +8,12 @@ interface Props {
   test: TestDef;
 }
 const { exam, test } = Astro.props;
-const questions = test.sections.reduce((n, s) => n + s.questions.length, 0);
+const questions = test.sections.reduce((n, s) => n + s.length, 0);
 const minutes = test.sections.reduce((n, s) => n + s.timeMinutes, 0);
 const href = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}/${test.id}/`);
 const difficulties = test.sections.flatMap((s) => s.questions.map((q) => exam.questions.get(q)!.data.difficulty));
 const avg = difficulties.reduce((a, b) => a + b, 0) / difficulties.length;
-const level = avg < 2.5 ? 'Easier' : avg < 3.5 ? 'Medium' : 'Harder';
+const level = test.adaptive ? 'Adaptive' : avg < 2.5 ? 'Easier' : avg < 3.5 ? 'Medium' : 'Harder';
 ---
 
 <li>
@@ -46,7 +46,7 @@ const level = avg < 2.5 ? 'Easier' : avg < 3.5 ? 'Medium' : 'Harder';
       text-align: right;
     }
     .level {
-      min-width: 6ch;
+      min-width: 8ch;
     }
   }
 </style>

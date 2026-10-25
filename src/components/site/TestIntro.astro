@@ -25,6 +25,15 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
     <p class="eyebrow">{config.name} · {test.kind === 'mock' ? 'Mock test' : 'Practice set'}</p>
     <h1>{test.title}</h1>
     {test.description && <p>{test.description}</p>}
+    {
+      test.adaptive && (
+        <p>
+          This mock is <strong>adaptive</strong>, like the real exam: each question is chosen from your answers so far, so a
+          strong answer brings a harder question and a weak one an easier question. The score estimate takes the difficulty of
+          the questions you were given into account.
+        </p>
+      )
+    }
   </header>
 
   <div class="table-wrap" tabindex="0" role="region" aria-label="Sections in this test">
@@ -42,7 +51,7 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
           rows.map((s) => (
             <tr>
               <td>{s.config.name}</td>
-              <td class="num">{s.questions.length}</td>
+              <td class="num">{s.length}</td>
               <td class="num">{s.timeMinutes} min</td>
               <td>{s.config.tools.length ? s.config.tools.map((x) => x[0].toUpperCase() + x.slice(1)).join(', ') : 'None'}</td>
             </tr>

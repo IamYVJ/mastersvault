@@ -1,7 +1,7 @@
 // Compiles loaded content into the JSON the browser receives: Markdown becomes
 // HTML, answers become indices, and each question gets a stimulus + response spec.
 import { createHash } from 'node:crypto';
-import { toNumber, type ExamBundle, type Question, type TestDef } from './load.ts';
+import { expandSlots, toNumber, type ExamBundle, type Question, type TestDef } from './load.ts';
 import { DS_CHOICES } from './labels.ts';
 import { renderInline, renderMarkdown } from './markdown.ts';
 import { BLANK, type Table } from './schema.ts';
@@ -156,7 +156,7 @@ export function buildTestPayload(bundle: ExamBundle, test: TestDef): TestPayload
     version: 1,
     hash: '',
     exam: { id: bundle.id, name: config.name, rules: config.rules, totalScore: config.totalScore },
-    test: { id: test.id, kind: test.kind, title: test.title, description: test.description },
+    test: { id: test.id, kind: test.kind, title: test.title, description: test.description, ...(test.adaptive && { adaptive: true }) },
     sections: [],
     topics: {},
     questions: {},
@@ -173,7 +173,9 @@ export function buildTestPayload(bundle: ExamBundle, test: TestDef): TestPayload
       timeMinutes: s.timeMinutes,
       tools: section.tools,
       score: section.score,
-      questionIds: s.questions,
+      // An adaptive section starts empty: the engine serves its questions from the pool as the test goes.
+      questionIds: test.adaptive ? [] : s.questions,
+      ...(test.adaptive && { adaptive: { length: s.length, slots: expandSlots(section.adaptive!.slots), pool: s.questions } }),
     });
     for (const qid of s.questions) {
       const rendered = renderQuestion(bundle.questions.get(qid)!).question;
@@ -185,7 +187,12 @@ export function buildTestPayload(bundle: ExamBundle, test: TestDef): TestPayload
     }
   }
   // Only structure and answer keys count: fixing a typo in an explanation shouldn't invalidate saved attempts.
-  const shape = payload.sections.map((s) => [s.id, s.timeMinutes, s.questionIds.map((q) => [q, payload.questions[q].response])]);
+  const shape = payload.sections.map((s) => [
+    s.id,
+    s.timeMinutes,
+    (s.adaptive?.pool ?? s.questionIds).map((q) => [q, payload.questions[q].response]),
+    ...(s.adaptive ? [s.adaptive.length, s.adaptive.slots] : []),
+  ]);
   payload.hash = createHash('sha1').update(JSON.stringify(shape)).digest('hex').slice(0, 12);
   return payload;
 }

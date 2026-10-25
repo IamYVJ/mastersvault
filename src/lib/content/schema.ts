@@ -28,6 +28,17 @@ export type Tool = (typeof TOOLS)[number];
 
 // ---------------------------------------------------------------- exam config
 
+/**
+ * One step of an adaptive section's plan: `count` single questions of a type, or a block of
+ * questions that share a Reading Comprehension passage or a Multi-Source Reasoning source set.
+ */
+export const adaptiveSlotSchema = z.union([
+  z.object({ type: questionType, count: z.number().int().positive().default(1) }).strict(),
+  z.object({ passage: z.number().int().min(2) }).strict(),
+  z.object({ sources: z.number().int().min(2) }).strict(),
+]);
+export type AdaptiveSlotData = z.infer<typeof adaptiveSlotSchema>;
+
 export const examSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
@@ -44,6 +55,8 @@ export const examSchema = z.object({
         tools: z.array(z.enum(TOOLS)).default([]),
         score: z.object({ min: z.number().int(), max: z.number().int() }),
         topics: z.array(z.object({ id: slug, name: z.string().min(1) })).min(1),
+        /** The order of question types in an adaptive mock; needed only if the exam has adaptive mocks. */
+        adaptive: z.object({ slots: z.array(adaptiveSlotSchema).min(1) }).optional(),
       }),
     )
     .min(1),
@@ -206,6 +219,13 @@ export type NoteData = z.infer<typeof noteSchema>;
 // ---------------------------------------------------------------------- tests
 
 export const mockSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  sections: z.record(slug, z.array(slug).min(1)),
+});
+
+/** An adaptive mock: for each section, the pool of questions from which the engine chooses as the test goes. */
+export const adaptiveSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   sections: z.record(slug, z.array(slug).min(1)),

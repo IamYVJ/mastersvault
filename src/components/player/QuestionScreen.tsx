@@ -1,6 +1,7 @@
 // One question on screen, during the section or while editing from review.
 import QuestionView from '../questions/QuestionView.tsx';
 import { activeQuestionId, canEdit, changesLeft, currentSection, sectionElapsed, sectionRemaining } from '../../lib/engine/attempt.ts';
+import { sectionLength } from '../../lib/engine/adaptive.ts';
 import { isComplete } from '../../lib/engine/grading.ts';
 import { reportIssueUrl } from '../../lib/site.ts';
 import type { PlayerProps } from './context.ts';
@@ -22,7 +23,7 @@ export default function QuestionScreen(props: PlayerProps) {
   const qid = activeQuestionId(attempt)!;
   const question = payload.questions[qid];
   const index = sec.questionIds.indexOf(qid);
-  const total = sec.questionIds.length;
+  const total = sectionLength(payload, sec.id);
   const response = sec.responses[qid] ?? null;
   const complete = isComplete(question.response, response);
   const editable = canEdit(attempt, rules);

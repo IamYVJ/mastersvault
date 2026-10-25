@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { DS_CHOICES } from '../../lib/content/labels.ts';
 import { breakRemaining, currentSection, type Settings } from '../../lib/engine/attempt.ts';
+import { sectionLength } from '../../lib/engine/adaptive.ts';
 import { formatDuration } from '../../lib/engine/results.ts';
 import type { PlayerProps } from './context.ts';
 import { ExitIcon } from './icons.tsx';
@@ -56,7 +57,7 @@ export function SetupScreen({ payload, rules, act, requestExit, exitLabel }: Pla
   const [settings, setSettings] = useState<Settings>({ timed: true, explanations: 'end' });
   const shown = isMock ? rules : { ...rules, timed: settings.timed, explanations: settings.explanations };
   const totalMin = payload.sections.reduce((n, s) => n + s.timeMinutes, 0);
-  const totalQ = payload.sections.reduce((n, s) => n + s.questionIds.length, 0);
+  const totalQ = payload.sections.reduce((n, s) => n + sectionLength(payload, s.id), 0);
 
   return (
     <Shell
@@ -90,7 +91,7 @@ export function SetupScreen({ payload, rules, act, requestExit, exitLabel }: Pla
             {payload.sections.map((s) => (
               <tr key={s.id}>
                 <td>{s.name}</td>
-                <td className="num">{s.questionIds.length}</td>
+                <td className="num">{sectionLength(payload, s.id)}</td>
                 <td className="num">{shown.timed ? `${s.timeMinutes} min` : 'Untimed'}</td>
               </tr>
             ))}
@@ -221,7 +222,7 @@ export function SectionIntroScreen({ payload, attempt, rules, act, requestExit }
   const sec = currentSection(attempt)!;
   const meta = payload.sections.find((s) => s.id === sec.id)!;
   const multi = attempt.order.length > 1;
-  const types = new Set(sec.questionIds.map((id) => payload.questions[id].type));
+  const types = new Set((meta.adaptive?.pool ?? sec.questionIds).map((id) => payload.questions[id].type));
 
   return (
     <Shell
@@ -243,11 +244,18 @@ export function SectionIntroScreen({ payload, attempt, rules, act, requestExit }
         )}
         <h1>{meta.name}</h1>
         <p className="player-lead">
-          {sec.questionIds.length} questions
+          {sectionLength(payload, sec.id)} questions
           {sec.limitMs !== null ? ` · ${minutes(sec.limitMs)} minutes` : ' · untimed'}
           {meta.tools.length > 0 && ` · ${meta.tools.map((t) => toolNames[t] ?? t).join(' and ')} available from the top bar`}
         </p>
         <p>The timer starts when you select <strong>Begin section</strong>.</p>
+        {meta.adaptive && (
+          <p>
+            This section is <strong>adaptive</strong>: each question is chosen from your answers so far, so it gets harder
+            as you answer correctly and easier when you don't. Answer every question before moving on; you can't go back,
+            but you can review and change answers at the end of the section.
+          </p>
+        )}
 
         {types.has('data-sufficiency') && (
           <section className="player-instructions">

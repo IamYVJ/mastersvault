@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { z } from 'zod';
 import {
+  adaptiveSchema,
   BLANK,
   examSchema,
   mockSchema,
@@ -21,12 +22,15 @@ import {
   questionType,
   sourceSetSchema,
   type Chart,
+  type AdaptiveSlotData,
   type ExamConfig,
   type NoteData,
   type QuestionData,
   type QuestionType,
+  type SectionConfig,
   type SourceSetData,
 } from './schema.ts';
+import type { AdaptiveSlot } from './types.ts';
 import { parseFrontmatter, parseYaml } from './yaml.ts';
 
 // The content is kept in its own repository. It's read from content/ when that folder exists
@@ -79,10 +83,13 @@ export const GENERAL_NOTES = 'general';
 export interface TestDef {
   id: string;
   kind: 'mock' | 'practice';
+  /** An adaptive mock: each section's `questions` is a pool, from which `length` are served. */
+  adaptive?: boolean;
   file: string;
   title: string;
   description?: string;
-  sections: { id: string; questions: string[]; timeMinutes: number }[];
+  /** `length` is the number of questions a test taker answers: all of `questions`, except in an adaptive mock. */
+  sections: { id: string; questions: string[]; length: number; timeMinutes: number }[];
 }
 
 export interface ExamBundle {
@@ -163,6 +170,19 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
 
   const sections = new Map(config.sections.map((s) => [s.id, s]));
   if (sections.size !== config.sections.length) error(examFile, 'section ids must be unique');
+  config.sections.forEach((s, i) => {
+    if (!s.adaptive) return;
+    const where = `sections.${i}.adaptive`;
+    const slots = expandSlots(s.adaptive.slots);
+    if (slotLength(slots) !== s.questionCount)
+      error(examFile, `${where}: the slots add up to ${slotLength(slots)} questions, but the section has ${s.questionCount}`);
+    for (const slot of slots) {
+      const type = slot.kind === 'single' ? slot.type : slot.stimulus === 'passage' ? 'reading-comprehension' : 'multi-source-reasoning';
+      if (!s.questionTypes.includes(type)) error(examFile, `${where}: "${type}" is not a question type of this section`);
+      if (slot.kind === 'single' && (type === 'reading-comprehension' || type === 'multi-source-reasoning'))
+        error(examFile, `${where}: ${type} questions come in blocks; use { ${type === 'reading-comprehension' ? 'passage' : 'sources'}: <questions> }`);
+    }
+  });
 
   // ---------------------------------------------------------------- passages
   const passages = new Map<string, Passage>();
@@ -319,7 +339,71 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
       file,
       title: data.title,
       description: data.description,
-      sections: config.sections.map((s) => ({ id: s.id, questions: data.sections[s.id] ?? [], timeMinutes: s.timeMinutes })),
+      sections: config.sections.map((s) => {
+        const questions = data.sections[s.id] ?? [];
+        return { id: s.id, questions, length: questions.length, timeMinutes: s.timeMinutes };
+      }),
+    });
+  }
+
+  // ---------------------------------------------------------- adaptive mocks
+  // Each section lists a pool; the engine serves questions from it slot by slot, following the
+  // section's plan in exam.yaml. Ids get an "adaptive-" prefix so they can't collide with numbered mocks.
+  const checkPool = (file: string, label: string, pool: string[], section: SectionConfig) => {
+    const seen = new Set<string>();
+    const drafts: string[] = [];
+    for (const qid of pool) {
+      const q = questions.get(qid);
+      if (!q) {
+        error(file, `${label}: question "${qid}" not found`);
+        continue;
+      }
+      if (seen.has(qid)) error(file, `${label}: question "${qid}" is listed twice`);
+      seen.add(qid);
+      if (q.section !== section.id) error(file, `${label}: "${qid}" belongs to section "${q.section}", not "${section.id}"`);
+      if (q.data.status === 'draft') drafts.push(qid);
+    }
+    if (drafts.length) warn(file, `${label}: ${drafts.length} question(s) not yet reviewed`);
+    const need = poolNeeds(expandSlots(section.adaptive!.slots));
+    const have = poolSupply(pool.map((id) => questions.get(id)).filter((q) => q !== undefined).map((q) => q.data));
+    for (const [key, size] of have.groupSizes)
+      if (!need.groupSizes.has(key.split(':')[0] + ':' + size))
+        error(file, `${label}: ${describeGroup(key)} has ${size} question(s) in the pool, which matches no block in the section's plan`);
+    for (const [slot, count] of need.counts) {
+      const available = have.counts.get(slot) ?? 0;
+      if (available < count) error(file, `${label}: the plan needs ${count} × ${slotName(slot)}, but the pool has only ${available}`);
+      else if (available < 2 * count)
+        warn(file, `${label}: the pool has ${available} × ${slotName(slot)} for ${count} slot(s); with fewer than ${2 * count} the engine has little to choose from`);
+    }
+    for (const slot of have.counts.keys())
+      if (!need.counts.has(slot)) error(file, `${label}: the pool has ${slotName(slot)}, which the section's plan never serves`);
+  };
+  for (const { id: fileId, file } of list(path.join('tests', 'adaptive'), /\.ya?ml$/)) {
+    const raw = tryRead(file, parseYaml);
+    if (raw === null) continue;
+    const data = parse(adaptiveSchema, raw, file);
+    if (!data) continue;
+    for (const key of Object.keys(data.sections))
+      if (!sections.has(key)) error(file, `sections.${key}: not a section in exam.yaml`);
+    for (const s of config.sections) {
+      const pool = data.sections[s.id];
+      if (!pool) error(file, `sections.${s.id}: missing (an adaptive mock must include every section)`);
+      else if (!s.adaptive) error(file, `sections.${s.id}: exam.yaml has no adaptive plan for this section`);
+      else checkPool(file, `sections.${s.id}`, pool, s);
+    }
+    mocks.push({
+      id: `adaptive-${fileId}`,
+      kind: 'mock',
+      adaptive: true,
+      file,
+      title: data.title,
+      description: data.description,
+      sections: config.sections.map((s) => ({
+        id: s.id,
+        questions: data.sections[s.id] ?? [],
+        length: s.questionCount,
+        timeMinutes: s.timeMinutes,
+      })),
     });
   }
 
@@ -342,7 +426,7 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
       file,
       title: data.title,
       description: data.description,
-      sections: [{ id: section.id, questions: data.questions, timeMinutes: data.timeMinutes ?? paced }],
+      sections: [{ id: section.id, questions: data.questions, length: data.questions.length, timeMinutes: data.timeMinutes ?? paced }],
       order: data.order,
     });
   }
@@ -367,6 +451,55 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
   for (const s of sources.values()) if (!referencedSources.has(s.id)) warn(s.file, 'source set is not used by any question');
 
   return { bundle: { id: examId, config, questions, passages, sources, mocks, practice, notes }, issues };
+}
+
+// ------------------------------------------------------------ adaptive plans
+
+/** The plan in exam.yaml, one entry per slot: `{ type, count }` becomes `count` single slots. */
+export function expandSlots(slots: AdaptiveSlotData[]): AdaptiveSlot[] {
+  return slots.flatMap((s): AdaptiveSlot[] => {
+    if ('type' in s) return Array.from({ length: s.count }, () => ({ kind: 'single', type: s.type }));
+    if ('passage' in s) return [{ kind: 'group', stimulus: 'passage', size: s.passage }];
+    return [{ kind: 'group', stimulus: 'sources', size: s.sources }];
+  });
+}
+
+export const slotLength = (slots: AdaptiveSlot[]) => slots.reduce((n, s) => n + (s.kind === 'single' ? 1 : s.size), 0);
+
+/** A slot's key: "single:<type>", or "passage:<size>" / "sources:<size>" for a block. */
+export const slotKey = (s: AdaptiveSlot) => (s.kind === 'single' ? `single:${s.type}` : `${s.stimulus}:${s.size}`);
+
+const slotName = (key: string) => {
+  const [kind, rest] = key.split(':');
+  if (kind === 'single') return `${rest} question`;
+  return `${kind === 'passage' ? 'passage' : 'source set'} with ${rest} questions`;
+};
+const describeGroup = (key: string) => {
+  const [kind, id] = key.split(':');
+  return kind === 'passage' ? `passage "${id}"` : `source set "${id}"`;
+};
+
+/** How many of each kind of slot a plan has, and which block sizes it uses. */
+export function poolNeeds(slots: AdaptiveSlot[]) {
+  const counts = new Map<string, number>();
+  for (const s of slots) counts.set(slotKey(s), (counts.get(slotKey(s)) ?? 0) + 1);
+  return { counts, groupSizes: new Set(slots.filter((s) => s.kind === 'group').map(slotKey)) };
+}
+
+/** What a pool can fill: single questions by type, and blocks by size (the pool questions sharing a passage or source set). */
+export function poolSupply(pool: QuestionData[]) {
+  const groupSizes = new Map<string, number>();
+  const counts = new Map<string, number>();
+  for (const q of pool) {
+    const group = q.type === 'reading-comprehension' ? `passage:${q.passage}` : q.type === 'multi-source-reasoning' ? `sources:${q.source}` : null;
+    if (group) groupSizes.set(group, (groupSizes.get(group) ?? 0) + 1);
+    else counts.set(`single:${q.type}`, (counts.get(`single:${q.type}`) ?? 0) + 1);
+  }
+  for (const [group, size] of groupSizes) {
+    const key = `${group.split(':')[0]}:${size}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return { counts, groupSizes };
 }
 
 function groupKey(q: QuestionData): string | null {

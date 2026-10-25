@@ -13,6 +13,7 @@ import {
   reduce,
   rulesFor,
 } from '../../lib/engine/attempt.ts';
+import { servePoolInOrder } from '../../lib/engine/adaptive.ts';
 import { fetchPayload, OutdatedPageError } from '../../lib/engine/codec.ts';
 import { clearAttempt, loadAttempt, recordAttempt, saveAttempt } from '../../lib/engine/storage.ts';
 import Calculator from './Calculator.tsx';
@@ -38,7 +39,7 @@ export default function TestPlayer({ payloadUrl, testKey, exitUrl }: Props) {
 
   useEffect(() => {
     fetchPayload(payloadUrl)
-      .then(setPayload)
+      .then((p) => setPayload(import.meta.env.DEV && new URLSearchParams(location.search).has('pool') ? servePoolInOrder(p) : p))
       .catch((e: Error) => setError({ message: e.message, outdated: e instanceof OutdatedPageError }));
   }, [payloadUrl]);
 
