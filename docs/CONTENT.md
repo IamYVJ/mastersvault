@@ -163,7 +163,7 @@ Check a finished mock with `npm run verify -- --balance`, which prints each sect
 
 ### Adaptive mocks
 
-An **adaptive mock** (`tests/adaptive/01.yaml` to `03.yaml`, shown on the site as `adaptive-01` to `adaptive-03`) works like the real exam: instead of a fixed list, each section has a **pool**, and the test engine chooses each question from the pool as the test goes, based on the answers so far. A test taker still answers the section's usual number of questions (21, 23 and 20) in the usual time.
+An **adaptive mock** (`tests/adaptive/01.yaml` to `04.yaml`, shown on the site as `adaptive-01` to `adaptive-04`) works like the real exam: instead of a fixed list, each section has a **pool**, and the test engine chooses each question from the pool as the test goes, based on the answers so far. A test taker still answers the section's usual number of questions (21, 23 and 20) in the usual time.
 
 ```yaml
 title: Adaptive Mock 1
