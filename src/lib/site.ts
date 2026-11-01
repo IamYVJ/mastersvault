@@ -16,10 +16,11 @@ export interface ExamNotice {
   trademark: string;
 }
 
-const list = (items: string[], last: string) =>
+/** "GMAT and GRE", "GMAC or ETS". */
+export const list = (items: string[], last: string) =>
   items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} ${last} ${items[items.length - 1]}`;
 /** "GMAC" from "the Graduate Management Admission Council (GMAC)". */
-const short = (maker: string) => /\(([^)]+)\)\s*$/.exec(maker)?.[1] ?? maker;
+export const short = (maker: string) => /\(([^)]+)\)\s*$/.exec(maker)?.[1] ?? maker;
 
 /** The site's description for search results and link previews, naming the exams it covers. */
 export function siteDescription(exams: ExamNotice[]): string {

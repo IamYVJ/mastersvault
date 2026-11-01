@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildTestPayload, checkContent, getExam } from '../src/lib/content/index.ts';
-import { loadExam } from '../src/lib/content/load.ts';
+import { listExamIds as allExamIds, loadExam } from '../src/lib/content/load.ts';
 import { parseYaml } from '../src/lib/content/yaml.ts';
 
 describe('real content', () => {
@@ -12,6 +12,13 @@ describe('real content', () => {
     expect(issues.filter((i) => i.level === 'error')).toEqual([]);
     // Validating every question takes several seconds, more than the default timeout.
   }, 60_000);
+
+  it('names the published exams on the link-preview image', () => {
+    // public/og.png is drawn by scripts/make-images.mjs, which records the exams it named.
+    const drawn = JSON.parse(fs.readFileSync('scripts/og-image.json', 'utf8')).exams;
+    const published = allExamIds().map(getExam).filter((e) => e.config.published).map((e) => e.config.name);
+    expect(drawn, 'public/og.png is out of date: run node scripts/make-images.mjs').toEqual(published);
+  });
 
   it('compiles answers to indices', () => {
     const exam = getExam('gmat');

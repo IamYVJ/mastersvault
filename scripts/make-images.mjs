@@ -1,14 +1,30 @@
 // Generates the link-preview image (public/og.png) and the app icons (public/icon-*.png).
-// The results are committed, so this only needs running when the branding changes:
+// The results are committed, so this only needs running when the branding changes or an exam is
+// published (the preview names the published exams; tests/og-image.test.ts fails until it's rerun):
 //   node scripts/make-images.mjs            (uses Playwright's Chromium)
 //   PW_CHANNEL=chrome node scripts/make-images.mjs   (uses an installed Chrome)
+//   MV_INCLUDE_UNPUBLISHED=1 node scripts/make-images.mjs --out <folder>   (a look at the preview with
+//                                           unpublished exams too, written elsewhere instead of public/)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { getExam } from '../src/lib/content/index.ts';
+import { listExamIds } from '../src/lib/content/load.ts';
+import { list, short } from '../src/lib/site.ts';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const out = path.join(root, 'public');
+const outFlag = process.argv.indexOf('--out');
+const out = outFlag > 1 ? path.resolve(process.argv[outFlag + 1]) : path.join(root, 'public');
+fs.mkdirSync(out, { recursive: true });
+// The exams the live site shows: those with `published: true` in their exam.yaml (all of them with
+// MV_INCLUDE_UNPUBLISHED=1, as for the build).
+const all = process.env.MV_INCLUDE_UNPUBLISHED === '1';
+const exams = listExamIds().map(getExam).filter((e) => all || e.config.published).map((e) => e.config);
+if (!exams.length) throw new Error('No published exams found: is the content checked out?');
+const names = exams.map((e) => e.name);
+/** What the preview was last drawn with, for tests/og-image.test.ts. */
+const RECORD = path.join(root, 'scripts', 'og-image.json');
 // The site's ink and paper colours (see src/styles/global.css).
 const INK = '#171716';
 const PAPER = '#faf9f6';
@@ -38,8 +54,8 @@ const page = (body, css = '') => `<!doctype html><html><head><meta charset="utf-
 const preview = page(
   `<div class="top"><span class="logo">${mark(44, PAPER)}</span><span>MastersVault</span></div>
    <h1>Practice that feels like test day.<i></i></h1>
-   <p class="sub">Free GMAT mock tests, section practice and revision notes, on a test screen that works like the real exam.</p>
-   <p class="note"><span>Full-length mocks · Original questions · No sign-up</span><span>Unofficial. Not affiliated with GMAC.</span></p>`,
+   <p class="sub">Free ${list(names, 'and')} mock tests, section practice and revision notes, on a test screen that works like the real exam.</p>
+   <p class="note"><span>Full-length mocks · Original questions · No sign-up</span><span>Unofficial. Not affiliated with ${list(exams.map((e) => short(e.testMaker)), 'or')}.</span></p>`,
   `background: ${PAPER}; color: ${INK}; padding: 64px 76px 56px; display: flex; flex-direction: column;`,
 ).replace(
   '</style>',
@@ -48,7 +64,7 @@ const preview = page(
    h1 { margin-top: 52px; max-width: 20ch; font-size: 76px; line-height: 1.04; letter-spacing: -0.05em; font-weight: 500; }
    h1 i { display: inline-block; width: 0.5em; height: 0.84em; margin-left: 0.14em; background: ${INK}; vertical-align: -0.05em; }
    .sub { margin-top: 28px; max-width: 40em; font-size: 24px; line-height: 1.45; color: ${MUTED}; }
-   .note { margin-top: auto; padding-top: 22px; border-top: 2px solid ${INK}; display: flex; justify-content: space-between; gap: 24px; white-space: nowrap; font-size: 18px; color: ${MUTED}; }
+   .note { margin-top: auto; padding-top: 22px; border-top: 2px solid ${INK}; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; white-space: nowrap; font-size: 17px; color: ${MUTED}; }
   </style>`,
 );
 
@@ -62,9 +78,13 @@ const shoot = async (html, width, height, file) => {
   await p.evaluate(() => document.fonts.ready);
   await p.screenshot({ path: path.join(out, file), type: 'png' });
   await p.close();
-  console.log(`wrote public/${file} (${width}×${height})`);
+  console.log(`wrote ${path.relative(root, path.join(out, file))} (${width}×${height})`);
 };
 
 await shoot(preview, 1200, 630, 'og.png');
+if (outFlag < 0) {
+  fs.writeFileSync(RECORD, `${JSON.stringify({ exams: names }, null, 2)}\n`);
+  console.log(`wrote scripts/og-image.json (the preview names ${list(names, 'and')})`);
+}
 for (const size of [512, 192, 180]) await shoot(icon(size), size, size, `icon-${size}.png`);
 await browser.close();

@@ -190,7 +190,7 @@ Each section also has **mixed sets**, numbered 1, 2 and so on. A mixed set cover
 
 ## GRE content
 
-`content/gre/` uses the same layout, with one more folder, `figures/`, and formats of its own. Its `exam.yaml` describes the GRE General Test as given since September 2023 (the Analytical Writing task is not emulated), and has `published: false` until there is enough material: an unpublished exam is left out of production builds, still appears in `npm run dev`, and is still validated. `MV_INCLUDE_UNPUBLISHED=1 npm run build` builds it anyway, to test it in a real build.
+`content/gre/` uses the same layout, with one more folder, `figures/`, and formats of its own. Its `exam.yaml` describes the GRE General Test as given since September 2023 (the Analytical Writing task is not emulated), and has `published: false` until there is enough material: an unpublished exam is left out of production builds, still appears in `npm run dev`, and is still validated. `MV_INCLUDE_UNPUBLISHED=1 npm run build` builds it anyway, to test it in a real build. When an exam is published, rerun `node scripts/make-images.mjs` so that the link-preview image (`public/og.png`) names it; `npm test` fails until then.
 
 ### Two-part measures
 
@@ -211,6 +211,23 @@ sections:
 When the second section begins, the engine estimates ability from the first section's answers (the same model as the score estimate) and serves the version whose average difficulty is closest to the target difficulty. Under this model the choice depends only on how many first-section answers were right. `npm run validate` checks the lengths, that no question appears twice, that the versions get harder in order, and warns if the first section is not of middling difficulty. Results and score estimates (130–170 per measure, 260–340 in all) are reported for each measure as a whole. The four sections come in a random order for each attempt (`sectionOrder: random`), always with a measure's first section before its second. Within a section, questions can be skipped, revisited and changed, and a review screen shows which are answered, incomplete or bookmarked.
 
 Practice sets work as for the GMAT: one section, any number of questions, timed by default at the measure's pace.
+
+### The GRE mock recipe
+
+ETS publishes the section lengths and times but not how many questions of each type a section has. The recipe below follows the proportions of ETS's own practice test (Practice General Test #1, the 2023 large-print edition, whose sections have 15 and 20 questions rather than 12 and 15), which across the two sections of each measure has, for Quant, 34% Quantitative Comparison, 49% single-answer multiple-choice, 11% multiple-answer and 6% Numeric Entry, with one Data Interpretation set, and, for Verbal, 49% Reading Comprehension, 31% Text Completion and 20% Sentence Equivalence. It also follows ETS's description of Verbal: about half the questions on passages, most passages one paragraph long and one or two of several paragraphs. Every one of a measure's four sections (the first, and each version of the second) follows the recipe on its own, since each is a whole section to the person who gets it.
+
+| Section | Quant | Verbal |
+|---|---|---|
+| First (12) | 4 Quantitative Comparison, then 6 multiple-choice, 1 multiple-answer, 1 Numeric Entry | Text Completion with 1, 2 and 3 blanks; a passage; 3 Sentence Equivalence; two more passages. Passages: a long one (2 paragraphs, 3 questions, one of them multiple-answer), a short one (2 questions, one multiple-answer) and an argument paragraph (1 question) |
+| Second (15, each version) | 5 Quantitative Comparison, then 7 multiple-choice, 2 multiple-answer, 1 Numeric Entry; 3 of these form a Data Interpretation set | Text Completion with 1, 1 and 2 blanks; a passage; 3 Sentence Equivalence; a passage; Text Completion with 2 and 3 blanks; a passage. Passages: a long one (3 or more paragraphs, 4 questions including a multiple-answer and a select-sentence), a short one (2 questions, one multiple-answer) and an argument paragraph (1 question) |
+
+- **Content areas (Quant):** arithmetic 4, algebra 3, geometry 2, data analysis 3 in the first section; 4, 4, 3 and 4 in the second (the Data Interpretation set counts as data analysis).
+- **Difficulty:** the first section has 1, 3, 4, 3 and 1 questions at levels 1 to 5 (average 3.00); the versions of the second have averages of 2.07 (easier: 5, 5, 4, 1, 0), 3.00 (medium: 1, 3, 7, 3, 1) and 3.93 (harder: 0, 1, 4, 5, 5). With these, the engine serves the easier version after 0–4 right answers in the first section, the medium after 5–7, and the harder after 8–12.
+- **Answers:** balanced within each section: each Quantitative Comparison letter at least once, no five-choice letter more than twice in Quant, Sentence Equivalence pairs using each of A–F once, and so on. Each measure has at least one fraction Numeric Entry and one multiple-answer question with a single correct choice.
+- **Timing:** the questions' `targetSeconds` add up to 85–100% of the section's time.
+- **No reuse:** nothing in a mock (question, passage, source set or figure) appears in any other test.
+
+The authoring tools in the content repository print a blueprint for each new mock from this recipe, and refuse a finished mock that doesn't follow it.
 
 ### GRE question types
 
