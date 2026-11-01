@@ -560,6 +560,19 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
+.player-parts {
+  margin: 10px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.player-part {
+  color: var(--text-muted);
+  font-weight: 400;
+}
 .player-score-card .player-warn {
   margin: 10px 0 0;
   font-size: 0.875rem;
@@ -850,6 +863,27 @@
 }
 .calc-key.is-wide {
   grid-column: span 2;
+}
+.calc-transfer {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 6px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.calc-transfer:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.calc-transfer:disabled {
+  border-color: var(--border);
+  color: var(--text-subtle);
+  cursor: not-allowed;
 }
 
 /* whiteboard */

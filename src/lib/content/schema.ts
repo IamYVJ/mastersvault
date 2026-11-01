@@ -19,12 +19,28 @@ export const QUESTION_TYPES = [
   'table-analysis',
   'graphics-interpretation',
   'two-part-analysis',
+  'quantitative-comparison',
+  'multiple-choice',
+  'multiple-answer',
+  'numeric-entry',
+  'text-completion',
+  'sentence-equivalence',
 ] as const;
 export const questionType = z.enum(QUESTION_TYPES);
 export type QuestionType = z.infer<typeof questionType>;
 
 export const TOOLS = ['calculator', 'whiteboard'] as const;
 export type Tool = (typeof TOOLS)[number];
+
+/** How the on-screen calculator works out 1 + 2 × 4: in the order keyed (12), or by the order of operations (9). */
+export const CALCULATOR_ORDERS = ['entry', 'precedence'] as const;
+export type CalculatorOrder = (typeof CALCULATOR_ORDERS)[number];
+
+/** Ways to answer a Reading Comprehension question: one choice, every correct choice, or a sentence of the passage. */
+export const READING_FORMATS = ['mcq', 'multiple-answer', 'select-sentence'] as const;
+export type ReadingFormat = (typeof READING_FORMATS)[number];
+
+export { TIERS, type Tier } from './tiers.ts';
 
 // ---------------------------------------------------------------- exam config
 
@@ -42,6 +58,12 @@ export type AdaptiveSlotData = z.infer<typeof adaptiveSlotSchema>;
 export const examSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  /** false keeps the exam out of production builds while it is being written; `npm run dev` still shows it. */
+  published: z.boolean().default(true),
+  /** Who owns and runs the exam, for the site's disclaimer: "the Graduate Management Admission Council (GMAC)". */
+  testMaker: z.string().min(1),
+  /** The trademark notice for the exam's name. */
+  trademark: z.string().min(1),
   sections: z
     .array(
       z.object({
@@ -53,7 +75,20 @@ export const examSchema = z.object({
         timeMinutes: z.number().int().positive(),
         questionTypes: z.array(questionType).min(1),
         tools: z.array(z.enum(TOOLS)).default([]),
+        calculator: z.enum(CALCULATOR_ORDERS).default('entry'),
         score: z.object({ min: z.number().int(), max: z.number().int() }),
+        /** The Reading Comprehension formats this section uses. */
+        readingFormats: z.array(z.enum(READING_FORMATS)).min(1).default(['mcq']),
+        /**
+         * A measure taken as two separately timed sections, where the second section's difficulty depends
+         * on the first (section-level adaptive). The two parts add up to questionCount and timeMinutes.
+         */
+        parts: z
+          .tuple([
+            z.object({ questionCount: z.number().int().positive(), timeMinutes: z.number().int().positive() }),
+            z.object({ questionCount: z.number().int().positive(), timeMinutes: z.number().int().positive() }),
+          ])
+          .optional(),
         topics: z.array(z.object({ id: slug, name: z.string().min(1) })).min(1),
         /** The order of question types in an adaptive mock; needed only if the exam has adaptive mocks. */
         adaptive: z.object({ slots: z.array(adaptiveSlotSchema).min(1) }).optional(),
@@ -61,13 +96,15 @@ export const examSchema = z.object({
     )
     .min(1),
   rules: z.object({
-    sectionOrder: z.enum(['fixed', 'choose']),
+    /** fixed: as listed; choose: the test taker picks; random: shuffled for each attempt, with a measure's first part before its second. */
+    sectionOrder: z.enum(['fixed', 'choose', 'random']),
     requireAnswerToAdvance: z.boolean(),
     allowBackNavigation: z.boolean(),
     bookmarks: z.boolean(),
     reviewAndEdit: z.object({
       enabled: z.boolean(),
-      maxAnswerChanges: z.number().int().nonnegative(),
+      /** null: any number of answers can be changed. */
+      maxAnswerChanges: z.number().int().nonnegative().nullable(),
     }),
     optionalBreak: z
       .object({
@@ -91,10 +128,19 @@ const base = z.object({
   // Authors assert every question is original work. Anything else is rejected.
   origin: z.literal('original', { error: 'every question must be original work (origin: original)' }),
   notes: z.string().optional(), // reviewer notes, never shown on the site
+  /** A diagram shown with the stem: figures/<file>.svg. The alt text must state everything the figure shows. */
+  figure: z.object({ file: slug, alt: text }).strict().optional(),
 });
 
 const letter = z.enum(['A', 'B', 'C', 'D', 'E']);
 const mcq = { choices: z.array(text).length(5), answer: letter };
+export const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] as const;
+/** One or more correct letters among the first `count`, e.g. [A, C]. */
+const letters = (count: number) =>
+  z
+    .array(z.enum(LETTERS.slice(0, count) as [string, ...string[]]))
+    .min(1)
+    .refine((a) => new Set(a).size === a.length, 'list each letter once');
 
 const dichotomous = {
   labels: z.tuple([text, text]),
@@ -146,7 +192,29 @@ export const BLANK = '___';
 export const questionSchemas = {
   'problem-solving': base.extend({ type: z.literal('problem-solving'), ...mcq }),
   'critical-reasoning': base.extend({ type: z.literal('critical-reasoning'), ...mcq }),
-  'reading-comprehension': base.extend({ type: z.literal('reading-comprehension'), passage: slug, ...mcq }),
+  // Questions written before there were other formats have no `format`, so it defaults to mcq.
+  'reading-comprehension': z.preprocess(
+    (v) => (v && typeof v === 'object' && !('format' in v) ? { ...v, format: 'mcq' } : v),
+    z.discriminatedUnion('format', [
+      base.extend({ type: z.literal('reading-comprehension'), passage: slug, format: z.literal('mcq'), ...mcq }),
+      base.extend({
+        type: z.literal('reading-comprehension'),
+        passage: slug,
+        format: z.literal('multiple-answer'),
+        choices: z.array(text).length(3),
+        answer: letters(3),
+      }),
+      base.extend({
+        type: z.literal('reading-comprehension'),
+        passage: slug,
+        format: z.literal('select-sentence'),
+        /** The sentence, exactly as written in the passage file. */
+        answer: text,
+        /** The paragraphs, counted from 1, whose sentences can be selected; every paragraph if omitted. */
+        paragraphs: z.array(z.number().int().positive()).min(1).optional(),
+      }),
+    ]),
+  ),
   'data-sufficiency': base.extend({
     type: z.literal('data-sufficiency'),
     statements: z.tuple([text, text]),
@@ -175,6 +243,44 @@ export const questionSchemas = {
     columns: z.tuple([text, text]),
     options: z.array(text).min(3).max(8),
     answer: z.tuple([text, text]),
+  }),
+  'quantitative-comparison': base.extend({
+    type: z.literal('quantitative-comparison'),
+    quantityA: text,
+    quantityB: text,
+    answer: z.enum(['A', 'B', 'C', 'D']),
+  }),
+  // A `source` puts the question in a Data Interpretation set: questions that share the same tables or graphs.
+  'multiple-choice': base.extend({ type: z.literal('multiple-choice'), source: slug.optional(), ...mcq }),
+  'multiple-answer': base.extend({
+    type: z.literal('multiple-answer'),
+    source: slug.optional(),
+    choices: z.array(text).min(3).max(8),
+    answer: letters(8),
+  }),
+  'numeric-entry': base.extend({
+    type: z.literal('numeric-entry'),
+    source: slug.optional(),
+    /** decimal: one box for an integer or a decimal; fraction: a numerator box over a denominator box. */
+    entry: z.enum(['decimal', 'fraction']).default('decimal'),
+    /** For example "12.5" or "3/8". Any equal entry is accepted, such as 12.50 or 6/16. */
+    answer: text,
+    /** Labels shown before and after the box, such as a currency sign or "%". */
+    before: z.string().optional(),
+    after: z.string().optional(),
+  }),
+  'text-completion': base.extend({
+    type: z.literal('text-completion'),
+    /** One entry per ___ in the stem, in order. */
+    blanks: z
+      .array(z.object({ options: z.array(text), answer: text }).strict())
+      .min(1)
+      .max(3),
+  }),
+  'sentence-equivalence': base.extend({
+    type: z.literal('sentence-equivalence'),
+    choices: z.array(text).length(6),
+    answer: letters(6).refine((a) => a.length === 2, 'give exactly two letters'),
   }),
 } satisfies Record<QuestionType, z.ZodType>;
 
@@ -218,10 +324,19 @@ export type NoteData = z.infer<typeof noteSchema>;
 
 // ---------------------------------------------------------------------- tests
 
+/** A two-part measure in a mock: its first section, and the three versions of its second. */
+export const stagedSectionSchema = z
+  .object({
+    first: z.array(slug).min(1),
+    second: z.object({ easier: z.array(slug).min(1), medium: z.array(slug).min(1), harder: z.array(slug).min(1) }).strict(),
+  })
+  .strict();
+export type StagedSectionData = z.infer<typeof stagedSectionSchema>;
+
 export const mockSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  sections: z.record(slug, z.array(slug).min(1)),
+  sections: z.record(slug, z.union([z.array(slug).min(1), stagedSectionSchema])),
 });
 
 /** An adaptive mock: for each section, the pool of questions from which the engine chooses as the test goes. */

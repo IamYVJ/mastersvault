@@ -1,11 +1,12 @@
 ---
-import { DISCLAIMER, SITE } from '../../lib/site';
+import { DISCLAIMER } from '../../lib/notices.ts';
+import { SITE } from '../../lib/site';
 import { url } from '../../lib/url';
 ---
 
 <footer class="site-footer">
   <div class="container">
-    <p class="disclaimer">{DISCLAIMER}</p>
+    <p class="disclaimer">{DISCLAIMER()}</p>
     <div class="row">
       <nav aria-label="Footer">
         <a href={url('/about/')}>About</a>

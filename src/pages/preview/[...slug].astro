@@ -21,7 +21,7 @@ const exams = getExams().map((exam) => {
       items: [...exam.questions.values()]
         .filter((q) => q.section === section.id)
         .map((q) => {
-          const { question } = renderQuestion(q);
+          const { question } = renderQuestion(q, exam);
           const st = question.stimulus;
           return {
             q,

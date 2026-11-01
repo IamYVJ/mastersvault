@@ -6,8 +6,9 @@
 // inside the reducer), so it is deterministic and survives background-tab
 // throttling. Time while the page is closed is not counted: on resume, clocks
 // stop at the last saved tick and restart when the test taker continues.
+import type { Tier } from '../content/schema.ts';
 import type { ResponseValue, TestPayload } from '../content/types.ts';
-import { nextQuestions, seedFor } from './adaptive.ts';
+import { chooseTier, mulberry32, nextQuestions, seedFor } from './adaptive.ts';
 import { isComplete } from './grading.ts';
 
 export interface Settings {
@@ -19,7 +20,7 @@ export interface Settings {
 export interface Rules {
   timed: boolean;
   explanations: 'end' | 'each';
-  sectionOrder: 'fixed' | 'choose';
+  sectionOrder: 'fixed' | 'choose' | 'random';
   requireAnswer: boolean;
   allowBack: boolean;
   bookmarks: boolean;
@@ -36,6 +37,8 @@ export interface SectionState {
   id: string;
   /** In an adaptive section, the questions served so far: it grows as the test goes. */
   questionIds: string[];
+  /** The second part of a two-part measure: the version served, chosen when the part began. */
+  tier?: Tier;
   limitMs: number | null;
   elapsedMs: number;
   runningSince: number | null;
@@ -136,8 +139,31 @@ export function rulesFor(payload: TestPayload, settings: Settings): Rules {
   };
 }
 
+/**
+ * The section order for `random`: every arrangement in which a measure's first part comes before its
+ * second is equally likely (V1 V2 Q1 Q2, V1 Q1 V2 Q2, Q1 V1 Q2 V2, ...). Seeded by the attempt, so a
+ * resumed attempt keeps its order.
+ */
+export function shuffledOrder(payload: TestPayload, attemptId: string): string[] {
+  const ids = payload.sections.map((s) => s.id);
+  const valid = (order: string[]) =>
+    payload.sections.every((s) => {
+      if (s.measure?.part !== 2) return true;
+      const first = payload.sections.find((x) => x.measure?.id === s.measure!.id && x.measure.part === 1);
+      return !first || order.indexOf(first.id) < order.indexOf(s.id);
+    });
+  const orders = permutations(ids).filter(valid);
+  return orders[Math.floor(mulberry32(seedFor(attemptId, 'order'))() * orders.length)];
+}
+
+function permutations<T>(items: T[]): T[][] {
+  if (items.length <= 1) return [items];
+  return items.flatMap((item, i) => permutations([...items.slice(0, i), ...items.slice(i + 1)]).map((rest) => [item, ...rest]));
+}
+
 export function createAttempt(payload: TestPayload, testKey: string, now: number, id = randomId()): Attempt {
   const sections: Record<string, SectionState> = {};
+  const random = payload.test.kind === 'mock' && payload.sections.length > 1 && payload.exam.rules.sectionOrder === 'random';
   for (const s of payload.sections) {
     sections[s.id] = {
       id: s.id,
@@ -168,7 +194,7 @@ export function createAttempt(payload: TestPayload, testKey: string, now: number
     createdAt: now,
     lastTick: now,
     phase: 'setup',
-    order: payload.sections.map((s) => s.id),
+    order: random ? shuffledOrder(payload, id) : payload.sections.map((s) => s.id),
     current: 0,
     sections,
     reviewOpen: null,
@@ -401,10 +427,23 @@ export function reduce(state: Attempt, action: Action, payload: TestPayload): At
 
 // ------------------------------------------------------------------ helpers
 
-/** Adaptive sections: appends the next question (or block) to the current section. False once it is complete. */
+/**
+ * Adaptive sections: appends the next question (or block) to the current section. The second part of
+ * a two-part measure gets all its questions at once, from the version its first part's result calls for.
+ * False once the section is complete.
+ */
 function serveNext(a: Attempt, payload: TestPayload): boolean {
   const sec = currentSection(a);
-  const plan = payload.sections.find((s) => s.id === sec?.id)?.adaptive;
+  const meta = payload.sections.find((s) => s.id === sec?.id);
+  if (sec && meta?.tiers) {
+    if (sec.questionIds.length) return false;
+    const first = payload.sections.find((s) => s.measure?.id === meta.measure?.id && s.measure?.part === 1);
+    const done = first ? a.sections[first.id] : undefined;
+    sec.tier = done ? chooseTier(payload, meta.tiers, done.questionIds, done.responses) : 'medium';
+    sec.questionIds = [...meta.tiers[sec.tier]];
+    return true;
+  }
+  const plan = meta?.adaptive;
   if (!sec || !plan) return false;
   const next = nextQuestions(payload, plan, sec.questionIds, sec.responses, seedFor(a.id, sec.id));
   sec.questionIds.push(...next);

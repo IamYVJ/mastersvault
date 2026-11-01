@@ -2,9 +2,9 @@
 
 Free practice for graduate admissions tests: full-length mocks, section practice and revision notes, on a test screen that works like the real exam's. It's a static site. Nothing runs on a server, and a user's progress stays in their browser.
 
-> GMAT™ is a registered trademark of the Graduate Management Admission Council (GMAC). MastersVault is an independent project and is not affiliated with, endorsed by, or sponsored by GMAC or any other test maker. All questions are original.
+> GMAT™ is a registered trademark of the Graduate Management Admission Council (GMAC). GRE® is a registered trademark of Educational Testing Service (ETS). MastersVault is an independent project and is not affiliated with, endorsed by, or sponsored by GMAC, ETS or any other test maker. All questions are original.
 
-**Status:** the GMAT content (25 mocks, five of them adaptive, 45 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them.
+**Status:** the GMAT content (25 mocks, five of them adaptive, 45 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them. GRE support is being built: the test screen handles every GRE question format and the section-by-section adaptive mocks, and the first practice sets and notes are written, but the GRE stays out of the live site (`published: false`) until there is more of it.
 
 ## Layout
 

@@ -1,10 +1,11 @@
 // The screens between questions: setup, section order, section instructions and breaks.
 import { useState } from 'react';
-import { DS_CHOICES } from '../../lib/content/labels.ts';
+import { DS_CHOICES, QC_CHOICES } from '../../lib/content/labels.ts';
+import { TIERS } from '../../lib/content/tiers.ts';
 import { breakRemaining, currentSection, type Settings } from '../../lib/engine/attempt.ts';
 import { sectionLength } from '../../lib/engine/adaptive.ts';
 import { formatDuration } from '../../lib/engine/results.ts';
-import type { PlayerProps } from './context.ts';
+import { sectionLabel, type PlayerProps } from './context.ts';
 import { ExitIcon } from './icons.tsx';
 import Shell from './Shell.tsx';
 
@@ -22,8 +23,16 @@ function ExitButton({ requestExit, label = 'Save and exit' }: { requestExit: () 
 
 function RulesList({ rules, payload }: Pick<PlayerProps, 'rules' | 'payload'>) {
   const multi = payload.sections.length > 1;
+  const twoPart = payload.sections.some((s) => s.measure);
   return (
     <ul className="player-rules">
+      {rules.sectionOrder === 'random' && <li>The sections come in a random order, as on the exam.</li>}
+      {twoPart && (
+        <li>
+          Each measure is split into two separately timed sections. How you do in a measure's first section decides how hard
+          its second section is.
+        </li>
+      )}
       {rules.timed ? (
         <li>{multi ? 'Each section has its own timer.' : 'The set is timed.'} When time runs out, the section ends and unanswered questions count as incorrect.</li>
       ) : (
@@ -90,7 +99,7 @@ export function SetupScreen({ payload, rules, act, requestExit, exitLabel }: Pla
           <tbody>
             {payload.sections.map((s) => (
               <tr key={s.id}>
-                <td>{s.name}</td>
+                <td>{sectionLabel(s)}</td>
                 <td className="num">{sectionLength(payload, s.id)}</td>
                 <td className="num">{shown.timed ? `${s.timeMinutes} min` : 'Untimed'}</td>
               </tr>
@@ -222,7 +231,10 @@ export function SectionIntroScreen({ payload, attempt, rules, act, requestExit }
   const sec = currentSection(attempt)!;
   const meta = payload.sections.find((s) => s.id === sec.id)!;
   const multi = attempt.order.length > 1;
-  const types = new Set((meta.adaptive?.pool ?? sec.questionIds).map((id) => payload.questions[id].type));
+  const ids = meta.adaptive?.pool ?? (meta.tiers ? TIERS.flatMap((t) => meta.tiers![t]) : sec.questionIds);
+  const types = new Set(ids.map((id) => payload.questions[id].type));
+  const kinds = new Set(ids.map((id) => payload.questions[id].response.kind));
+  const greQuant = ['quantitative-comparison', 'multiple-choice', 'multiple-answer', 'numeric-entry'].some((t) => types.has(t as never));
 
   return (
     <Shell
@@ -242,7 +254,10 @@ export function SectionIntroScreen({ payload, attempt, rules, act, requestExit }
             Section {attempt.current + 1} of {attempt.order.length}
           </p>
         )}
-        <h1>{meta.name}</h1>
+        <h1>
+          {meta.name}
+          {meta.measure && <span className="player-part"> · section {meta.measure.part} of 2</span>}
+        </h1>
         <p className="player-lead">
           {sectionLength(payload, sec.id)} questions
           {sec.limitMs !== null ? ` · ${minutes(sec.limitMs)} minutes` : ' · untimed'}
@@ -287,10 +302,82 @@ export function SectionIntroScreen({ payload, attempt, rules, act, requestExit }
             <p>Sort the table by any column using the <strong>Sort by</strong> menu or the column headings.</p>
           </section>
         )}
+        {meta.measure?.part === 2 && (
+          <p>This section's difficulty was set by your result in the first {meta.name} section.</p>
+        )}
+        {greQuant && (
+          <section className="player-instructions">
+            <h2>About the questions</h2>
+            <ul>
+              <li>All numbers are real numbers.</li>
+              <li>
+                Figures aren't necessarily drawn to scale. You can rely on what a figure shows about order and position (lines
+                that look straight are straight, and points on a line are in the order shown), but not on lengths or angle sizes
+                read off it.
+              </li>
+              <li>Number lines, coordinate grids, graphs and charts are drawn to scale.</li>
+            </ul>
+          </section>
+        )}
+        {types.has('quantitative-comparison') && (
+          <section className="player-instructions">
+            <h2>Quantitative Comparison</h2>
+            <p>
+              Compare Quantity A with Quantity B, using any information given above them. A symbol that appears more than once
+              means the same thing throughout the question. The answer choices are always the same:
+            </p>
+            <ol type="A">
+              {QC_CHOICES.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ol>
+          </section>
+        )}
+        {(types.has('multiple-answer') || kinds.has('multi')) && (
+          <section className="player-instructions">
+            <h2>Questions with one or more answers</h2>
+            <p>
+              Square boxes mean you select every choice that is correct: one, several or all of them, unless the question says
+              how many. You get credit only if you select all the correct choices and no others.
+            </p>
+          </section>
+        )}
+        {types.has('numeric-entry') && (
+          <section className="player-instructions">
+            <h2>Numeric Entry</h2>
+            <p>
+              Type your answer in the box, or as a fraction in the two boxes for the numerator and denominator. Equal values
+              all count, so 2.5 and 2.50 are both right, and a fraction needn't be in lowest terms. Round only if the question
+              asks you to. With a single box, the calculator's <strong>Transfer Display</strong> button copies its display into
+              the box.
+            </p>
+          </section>
+        )}
+        {types.has('text-completion') && (
+          <section className="player-instructions">
+            <h2>Text Completion</h2>
+            <p>
+              Choose one entry for each blank so that the whole passage makes sense. With two or three blanks, each blank has its
+              own column of choices. There is no credit for a partly correct answer.
+            </p>
+          </section>
+        )}
+        {types.has('sentence-equivalence') && (
+          <section className="player-instructions">
+            <h2>Sentence Equivalence</h2>
+            <p>
+              Choose the two entries that each complete the sentence correctly and give it the same meaning. There is no credit
+              for one correct choice on its own.
+            </p>
+          </section>
+        )}
         {types.has('reading-comprehension') && (
           <section className="player-instructions">
             <h2>Reading Comprehension</h2>
             <p>The passage stays on the left while you answer the questions about it on the right.</p>
+            {kinds.has('sentence') && (
+              <p>Some questions ask you to select a sentence: click it in the passage, or move to it with Tab and press Enter.</p>
+            )}
           </section>
         )}
         {!multi && <RulesList rules={rules} payload={payload} />}

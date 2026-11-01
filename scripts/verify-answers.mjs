@@ -7,6 +7,7 @@
 //   npm run verify                 run every check
 //   npm run verify -- --verbose    also print each check's lines
 //   npm run verify -- --balance    print each mock's answer-letter and difficulty counts instead
+//   npm run verify -- --exam gre   run only one exam's checks
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,7 +15,9 @@ import { CONTENT_ROOT, listExamIds } from '../src/lib/content/load.ts';
 
 const verbose = process.argv.includes('--verbose');
 const BALANCE = 'balance.mjs';
+const only = process.argv.includes('--exam') ? process.argv[process.argv.indexOf('--exam') + 1] : undefined;
 const dirs = listExamIds()
+  .filter((exam) => !only || exam === only)
   .map((exam) => path.join(CONTENT_ROOT, exam, 'verify'))
   .filter((dir) => fs.existsSync(dir));
 

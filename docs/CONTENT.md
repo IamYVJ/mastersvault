@@ -188,6 +188,64 @@ Besides the samplers and the topic sets, each section has three level sets: a **
 
 Each section also has **mixed sets**, numbered 1, 2 and so on. A mixed set covers every topic or question type in the section and runs from easy to hard in about the proportions of a mock section, so it works as a short timed section. Mixed sets come last in each section's list, and their questions aren't used in any mock.
 
+## GRE content
+
+`content/gre/` uses the same layout, with one more folder, `figures/`, and formats of its own. Its `exam.yaml` describes the GRE General Test as given since September 2023 (the Analytical Writing task is not emulated), and has `published: false` until there is enough material: an unpublished exam is left out of production builds, still appears in `npm run dev`, and is still validated. `MV_INCLUDE_UNPUBLISHED=1 npm run build` builds it anyway, to test it in a real build.
+
+### Two-part measures
+
+Verbal and Quant each have `parts` in `exam.yaml`: a first section of 12 questions and a second of 15, separately timed. On the real test the second section is easier or harder depending on how the first went. A GRE mock lists the first section and three versions of the second, each of the part's length:
+
+```yaml
+title: Mock Test 1
+sections:
+  quant:
+    first: [qc-0001, ...]          # 12, of middling difficulty (average about 3)
+    second:
+      easier: [...]                # 15 each; average difficulty must rise from easier to harder
+      medium: [...]
+      harder: [...]
+  verbal: { first: [...], second: { easier: [...], medium: [...], harder: [...] } }
+```
+
+When the second section begins, the engine estimates ability from the first section's answers (the same model as the score estimate) and serves the version whose average difficulty is closest to the target difficulty. Under this model the choice depends only on how many first-section answers were right. `npm run validate` checks the lengths, that no question appears twice, that the versions get harder in order, and warns if the first section is not of middling difficulty. Results and score estimates (130–170 per measure, 260–340 in all) are reported for each measure as a whole. The four sections come in a random order for each attempt (`sectionOrder: random`), always with a measure's first section before its second. Within a section, questions can be skipped, revisited and changed, and a review screen shows which are answered, incomplete or bookmarked.
+
+Practice sets work as for the GMAT: one section, any number of questions, timed by default at the measure's pace.
+
+### GRE question types
+
+| Type | Prefix | Fields |
+|---|---|---|
+| `quantitative-comparison` | `qc-` | `quantityA`, `quantityB` (Markdown), `answer` A–D. The four choices are fixed. The stem holds any centred information and may be empty. |
+| `multiple-choice` | `mc-` | Five `choices` and an `answer` letter, as for Problem Solving. |
+| `multiple-answer` | `ma-` | 3 to 8 `choices`, and `answer` as a list of letters, e.g. `[A, C]`. Say "Indicate all such ..." in the stem. Credit only for exactly the right set. |
+| `numeric-entry` | `ne-` | `answer` as written: `"12.5"` for one box, or `entry: fraction` with `answer: 3/8` for two boxes. Optional `before` and `after` labels (`after: "%"`). Any equal entry is accepted (2.50 for 2.5, 6/16 for 3/8), compared exactly, so a question that needs rounding must say so and key the rounded value. |
+| `text-completion` | `tc-` | One `___` in the stem per blank (1 to 3), and `blanks: [{ options: [...], answer: ... }]` in order. One blank has 5 options; two or three blanks have 3 each. |
+| `sentence-equivalence` | `se-` | One `___` in the stem, six `choices`, and `answer` as exactly two letters. |
+| `reading-comprehension` | `rc-` | As for the GMAT, plus `format`: `mcq` (the default), `multiple-answer` (three `choices`, `answer` a list of letters), or `select-sentence` (`answer` is the sentence exactly as written in the passage; optional `paragraphs: [2]` limits which paragraphs can be selected). Short "argument" passages with one question are Reading Comprehension on the GRE. |
+
+`multiple-choice`, `multiple-answer` and `numeric-entry` questions can have `source: di-s001`, a source set in `sources/`, which makes them a **Data Interpretation set**: questions on the same tables or graphs, shown beside them and kept together in a test.
+
+A section's `readingFormats` in `exam.yaml` lists the Reading Comprehension formats it allows; the GMAT allows only `mcq`.
+
+**Select-sentence passages** must be plain paragraphs (no headings, lists or tables). The passage is split into sentences at ".", "?" or "!" followed by a space and a capital letter, a digit or an opening quote; abbreviations such as "Dr." and initials such as "J." don't end a sentence. The validator lists the sentences it found if an answer doesn't match one exactly.
+
+### Figures
+
+Any question can have a diagram under its stem:
+
+```yaml
+figure:
+  file: fig-0001          # figures/fig-0001.svg
+  alt: Triangle ABC, with vertex A at the top ... Sides AB and AC are each labelled 10, and the base BC is labelled 12.
+```
+
+The SVG is put into the page as it is, so the validator refuses scripts, event handlers, links, `url()`, images and `foreignObject`. Give the `<svg>` a `viewBox` but no `width` or `height`, and draw with `currentColor` so the figure works in dark mode. The `alt` text must state everything the figure shows: it is what screen readers read and what reviewers solve from. As on the real test, figures are not necessarily drawn to scale, but what they show about order and position holds.
+
+### The calculator
+
+`calculator: precedence` in a section gives the GRE's calculator: order of operations (1 + 2 × 4 = 9), parentheses, an 8-digit display, one memory (M+, MR, MC), and **Transfer Display**, which copies the display into a one-box Numeric Entry answer. The default, `entry`, is the GMAT's calculator, which works in the order keys are pressed.
+
 ## Revision notes
 
 A note is a Markdown file in `revision/<section>/` (or `revision/general/` for advice about the whole exam). The file name becomes the URL: `revision/quant/percents.md` is served at `/gmat/revision/quant/percents/`.

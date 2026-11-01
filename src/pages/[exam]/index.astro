@@ -14,6 +14,8 @@ const totalQuestions = config.sections.reduce((n, s) => n + s.questionCount, 0);
 const totalMinutes = config.sections.reduce((n, s) => n + s.timeMinutes, 0);
 const hours = `${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} min`;
 const r = config.rules;
+const twoPart = config.sections.filter((s) => s.parts);
+const words = ['none', 'one', 'two', 'three', 'four', 'five'];
 ---
 
 <Base title={`${config.name} prep`} description={config.description}>
@@ -64,8 +66,14 @@ const r = config.rules;
                     <strong>{s.name}</strong>
                     <div class="muted small">{s.description}</div>
                   </td>
-                  <td class="num">{s.questionCount}</td>
-                  <td class="num">{s.timeMinutes} min</td>
+                  <td class="num">
+                    {s.questionCount}
+                    {s.parts && <div class="muted small">{s.parts.map((p) => p.questionCount).join(' + ')}</div>}
+                  </td>
+                  <td class="num">
+                    {s.timeMinutes} min
+                    {s.parts && <div class="muted small">{s.parts.map((p) => p.timeMinutes).join(' + ')}</div>}
+                  </td>
                   <td>{s.questionTypes.map((t) => TYPE_LABELS[t]).join(', ')}</td>
                   <td>
                     {s.score.min}–{s.score.max}
@@ -86,16 +94,32 @@ const r = config.rules;
     <section class="section prose">
       <h2>How the test screen works</h2>
       <ul>
-        {r.sectionOrder === 'choose' && <li>You choose the order of the three sections before you start.</li>}
+        {r.sectionOrder === 'choose' && <li>You choose the order of the {words[config.sections.length] ?? config.sections.length} sections before you start.</li>}
+        {
+          twoPart.length > 0 && (
+            <li>
+              {twoPart.map((s) => s.name).join(' and ')} {twoPart.length > 1 ? 'are each' : 'is'} taken as two separately timed
+              sections. The second section is easier or harder depending on how you did in the first, and the score covers
+              both.
+            </li>
+          )
+        }
+        {r.sectionOrder === 'random' && <li>The sections come in a random order.</li>}
         <li>Each section has its own timer. When time runs out, the section ends.</li>
         {r.requireAnswerToAdvance && <li>You must answer each question before moving to the next one.</li>}
         {!r.allowBackNavigation && r.bookmarks && <li>You can't go back mid-section, but you can bookmark questions to revisit.</li>}
+        {r.allowBackNavigation && <li>Within a section you can skip questions, go back, bookmark questions and change any answer.</li>}
         {
-          r.reviewAndEdit.enabled && (
+          r.reviewAndEdit.enabled && r.reviewAndEdit.maxAnswerChanges !== null && (
             <li>
               If time remains after the last question, you can review your answers and change up to{' '}
               {r.reviewAndEdit.maxAnswerChanges} of them.
             </li>
+          )
+        }
+        {
+          r.reviewAndEdit.enabled && r.reviewAndEdit.maxAnswerChanges === null && (
+            <li>A review screen shows which questions you have answered and bookmarked, so you can go straight to any of them.</li>
           )
         }
         {

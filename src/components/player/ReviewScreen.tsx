@@ -2,8 +2,8 @@
 // how many answer changes are left.
 import { useState } from 'react';
 import { changesLeft, currentSection } from '../../lib/engine/attempt.ts';
-import { isComplete } from '../../lib/engine/grading.ts';
-import type { PlayerProps } from './context.ts';
+import { isComplete, isPartial } from '../../lib/engine/grading.ts';
+import { sectionLabel, type PlayerProps } from './context.ts';
 import { BookmarkIcon, ExitIcon } from './icons.tsx';
 import Modal from './Modal.tsx';
 import { sectionTimer } from './QuestionScreen.tsx';
@@ -17,6 +17,8 @@ export default function ReviewScreen(props: PlayerProps) {
   const [confirming, setConfirming] = useState(false);
   const left = changesLeft(attempt, rules);
   const isMock = payload.test.kind === 'mock';
+  // "Review & Edit" is the exam's name for a review with a limited number of answer changes.
+  const limited = isMock && left !== null;
   const lastSection = attempt.current === attempt.order.length - 1;
 
   const rows = sec.questionIds.map((qid, i) => {
@@ -25,6 +27,7 @@ export default function ReviewScreen(props: PlayerProps) {
       qid,
       i,
       answered: isComplete(payload.questions[qid].response, response),
+      partial: isPartial(payload.questions[qid].response, response),
       bookmarked: sec.bookmarks.includes(qid),
       edited: sec.edited.includes(qid),
       checked: sec.checked.includes(qid),
@@ -38,10 +41,10 @@ export default function ReviewScreen(props: PlayerProps) {
   return (
     <Shell
       title={payload.test.title}
-      subtitle={meta.name}
+      subtitle={sectionLabel(meta)}
       timer={sectionTimer(props)}
       tools={props.tools}
-      counter={isMock ? 'Review & Edit' : 'Review'}
+      counter={limited ? 'Review & Edit' : 'Review'}
       footerLeft={
         <button type="button" className="player-bar-btn" onClick={requestExit}>
           <ExitIcon />
@@ -55,9 +58,11 @@ export default function ReviewScreen(props: PlayerProps) {
       }
     >
       <div className="player-panel is-wide">
-        <h1>{isMock ? 'Review & Edit' : 'Review your answers'}</h1>
+        <h1>{limited ? 'Review & Edit' : 'Review your answers'}</h1>
         <p className="player-lead">
-          {isMock
+          {isMock && left === null
+            ? 'Open any question to check or change your answer, then finish the section when you are ready.'
+            : isMock
             ? left !== null && left > 0
               ? `Open any question to check it. You can change up to ${left} more ${left === 1 ? 'answer' : 'answers'} before the section ends.`
               : `You've used all ${rules.maxChanges} answer changes. You can still open questions to look at them.`
@@ -91,7 +96,7 @@ export default function ReviewScreen(props: PlayerProps) {
               <tr key={r.qid} className={r.answered ? '' : 'is-unanswered'}>
                 <td>Question {r.i + 1}</td>
                 <td>
-                  {r.answered ? 'Answered' : 'Not answered'}
+                  {r.answered ? 'Answered' : r.partial ? 'Incomplete' : 'Not answered'}
                   {r.edited && <span className="badge">changed</span>}
                   {r.checked && <span className="badge">checked</span>}
                 </td>

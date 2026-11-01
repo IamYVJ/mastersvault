@@ -3,7 +3,8 @@
 //   content/<exam>/exam.yaml
 //   content/<exam>/questions/<section>/<id>.md
 //   content/<exam>/passages/<id>.md          (Reading Comprehension)
-//   content/<exam>/sources/<id>.yaml         (Multi-Source Reasoning tabs)
+//   content/<exam>/sources/<id>.yaml         (Multi-Source Reasoning tabs, Data Interpretation sets)
+//   content/<exam>/figures/<id>.svg          (diagrams shown with a question's stem)
 //   content/<exam>/tests/mocks/<id>.yaml
 //   content/<exam>/tests/practice/<id>.yaml
 //   content/<exam>/revision/<section|general>/<slug>.md
@@ -21,6 +22,7 @@ import {
   questionSchemas,
   questionType,
   sourceSetSchema,
+  TIERS,
   type Chart,
   type AdaptiveSlotData,
   type ExamConfig,
@@ -29,9 +31,12 @@ import {
   type QuestionType,
   type SectionConfig,
   type SourceSetData,
+  type Tier,
 } from './schema.ts';
+import { normalize, splitSentences, unsplittable } from './sentences.ts';
 import type { AdaptiveSlot } from './types.ts';
 import { parseFrontmatter, parseYaml } from './yaml.ts';
+import { parseNumber } from '../engine/numeric.ts';
 
 // The content is kept in its own repository. It's read from content/ when that folder exists
 // (the build workflow checks it out there), and otherwise from a checkout next to this one.
@@ -67,6 +72,13 @@ export interface SourceSet {
   data: SourceSetData;
 }
 
+export interface Figure {
+  id: string;
+  file: string;
+  /** The SVG markup, checked to contain no scripts, event handlers or outside links. */
+  svg: string;
+}
+
 export interface Note {
   /** <folder>/<slug>, e.g. quant/percents */
   id: string;
@@ -88,8 +100,17 @@ export interface TestDef {
   file: string;
   title: string;
   description?: string;
-  /** `length` is the number of questions a test taker answers: all of `questions`, except in an adaptive mock. */
-  sections: { id: string; questions: string[]; length: number; timeMinutes: number }[];
+  /**
+   * `length` is the number of questions a test taker answers: all of `questions`, except in an adaptive
+   * mock or a two-part measure. A two-part measure also has `stages`: its first section and the three
+   * versions of its second, all of whose questions are in `questions`.
+   */
+  sections: { id: string; questions: string[]; length: number; timeMinutes: number; stages?: Stages }[];
+}
+
+export interface Stages {
+  first: string[];
+  second: Record<Tier, string[]>;
 }
 
 export interface ExamBundle {
@@ -98,6 +119,7 @@ export interface ExamBundle {
   questions: Map<string, Question>;
   passages: Map<string, Passage>;
   sources: Map<string, SourceSet>;
+  figures: Map<string, Figure>;
   mocks: TestDef[];
   practice: TestDef[];
   notes: Map<string, Note>;
@@ -113,7 +135,20 @@ export const ID_PREFIX: Record<QuestionType, string> = {
   'table-analysis': 'ta',
   'graphics-interpretation': 'gi',
   'two-part-analysis': 'tpa',
+  'quantitative-comparison': 'qc',
+  'multiple-choice': 'mc',
+  'multiple-answer': 'ma',
+  'numeric-entry': 'ne',
+  'text-completion': 'tc',
+  'sentence-equivalence': 'se',
 };
+
+/** The shared passage or source set a question belongs to, e.g. `passage "rc-p001"`, or null. */
+export function groupKey(q: QuestionData): string | null {
+  if (q.type === 'reading-comprehension') return `passage "${q.passage}"`;
+  if ('source' in q && q.source) return `source set "${q.source}"`;
+  return null;
+}
 
 const EXPLANATION_HEADING = /^##[ \t]+Explanation[ \t]*$/m;
 
@@ -171,6 +206,15 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
   const sections = new Map(config.sections.map((s) => [s.id, s]));
   if (sections.size !== config.sections.length) error(examFile, 'section ids must be unique');
   config.sections.forEach((s, i) => {
+    if (s.parts) {
+      const where = `sections.${i}.parts`;
+      const [a, b] = s.parts;
+      if (a.questionCount + b.questionCount !== s.questionCount)
+        error(examFile, `${where}: the parts have ${a.questionCount + b.questionCount} questions, but the section has ${s.questionCount}`);
+      if (a.timeMinutes + b.timeMinutes !== s.timeMinutes)
+        error(examFile, `${where}: the parts take ${a.timeMinutes + b.timeMinutes} minutes, but the section has ${s.timeMinutes}`);
+      if (s.adaptive) error(examFile, `sections.${i}: a section with parts can't also have a question-by-question adaptive plan`);
+    }
     if (!s.adaptive) return;
     const where = `sections.${i}.adaptive`;
     const slots = expandSlots(s.adaptive.slots);
@@ -208,6 +252,26 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
     });
     sources.set(id, { id, file, data });
   }
+
+  // ----------------------------------------------------------------- figures
+  // Figures are inlined into the page, so anything that could run code or load from elsewhere is refused.
+  const figures = new Map<string, Figure>();
+  for (const { id, file } of list('figures', /\.svg$/)) {
+    const svg = tryRead(file, (src) => src.replace(/^<\?xml[^>]*>\s*/, '').trim());
+    if (svg === null) continue;
+    const bad = [
+      [!/^<svg[\s>]/.test(svg), 'must start with <svg'],
+      [!/\sviewBox="/.test(svg.slice(0, svg.indexOf('>'))), 'the <svg> element needs a viewBox'],
+      [/\s(width|height)="/.test(svg.slice(0, svg.indexOf('>'))), 'leave width and height off the <svg> element, so it scales'],
+      [/<script|<foreignObject|<iframe|<image|<use/i.test(svg), 'scripts, foreignObject, iframe, image and use elements are not allowed'],
+      [/\son[a-z]+\s*=/i.test(svg), 'event handler attributes are not allowed'],
+      [/(href|src)\s*=/i.test(svg), 'links are not allowed'],
+      [/url\(|@import/i.test(svg), 'url() and @import are not allowed'],
+    ] as const;
+    for (const [failed, message] of bad) if (failed) error(file, message);
+    figures.set(id, { id, file, svg });
+  }
+  const usedFigures = new Set<string>();
 
   // --------------------------------------------------------------- questions
   const questions = new Map<string, Question>();
@@ -248,14 +312,24 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
         continue;
       }
       const [stem, explanation] = parts.map((p) => p.trim());
-      if (!stem && type !== 'table-analysis' && type !== 'graphics-interpretation') error(file, 'question stem is empty');
+      const stemOptional = ['table-analysis', 'graphics-interpretation', 'quantitative-comparison'].includes(type);
+      if (!stem && !stemOptional) error(file, 'question stem is empty');
       if (!explanation) error(file, 'explanation is empty');
 
-      checkQuestion(data, (m) => error(file, m));
-      if (data.type === 'reading-comprehension' && !passages.has(data.passage))
-        error(file, `passage "${data.passage}" not found in passages/`);
-      if (data.type === 'multi-source-reasoning' && !sources.has(data.source))
-        error(file, `source set "${data.source}" not found in sources/`);
+      checkQuestion(data, stem, (m) => error(file, m));
+      if (data.type === 'reading-comprehension') {
+        const passage = passages.get(data.passage);
+        if (!passage) error(file, `passage "${data.passage}" not found in passages/`);
+        if (!section.readingFormats.includes(data.format))
+          error(file, `format "${data.format}" is not one of this section's readingFormats (${section.readingFormats.join(', ')})`);
+        if (passage && data.format === 'select-sentence') checkSelectSentence(data, passage.body, (m) => error(file, m));
+      }
+      if ('source' in data && data.source && !sources.has(data.source)) error(file, `source set "${data.source}" not found in sources/`);
+      if (data.figure) {
+        usedFigures.add(data.figure.file);
+        if (!figures.has(data.figure.file)) error(file, `figure "${data.figure.file}" not found in figures/`);
+        if (data.figure.alt.length < 20) error(file, 'figure.alt: describe everything the figure shows, in words');
+      }
 
       questions.set(id, { id, section: section.id, file, data, stem, explanation });
     }
@@ -315,6 +389,33 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
     if (drafts.length) warn(file, `${label}: ${drafts.length} question(s) not yet reviewed: ${drafts.join(', ')}`);
   };
 
+  // A two-part measure: the first section is of middling difficulty, and the three versions of the
+  // second must get harder in order, since the engine sends stronger results to the harder ones.
+  const checkStages = (file: string, label: string, stages: Stages, section: SectionConfig) => {
+    const [first, second] = section.parts!;
+    const meanOf = (ids: string[]) => {
+      const ds = ids.map((id) => questions.get(id)?.data.difficulty).filter((d) => d !== undefined);
+      return ds.reduce((a, b) => a + b, 0) / (ds.length || 1);
+    };
+    if (stages.first.length !== first.questionCount)
+      error(file, `${label}.first: has ${stages.first.length} questions, the first part needs ${first.questionCount}`);
+    checkSequence(file, `${label}.first`, stages.first, section.id);
+    for (const tier of TIERS) {
+      const ids = stages.second[tier];
+      if (ids.length !== second.questionCount)
+        error(file, `${label}.second.${tier}: has ${ids.length} questions, the second part needs ${second.questionCount}`);
+      checkSequence(file, `${label}.second.${tier}`, ids, section.id);
+    }
+    const all = stageQuestions(stages);
+    const twice = [...new Set(all.filter((id, i) => all.indexOf(id) !== i))];
+    if (twice.length) error(file, `${label}: listed in more than one part or version: ${twice.join(', ')}`);
+    const means = TIERS.map((t) => meanOf(stages.second[t]));
+    if (!(means[0] < means[1] && means[1] < means[2]))
+      error(file, `${label}.second: average difficulty must rise from easier to medium to harder (now ${means.map((m) => m.toFixed(2)).join(', ')})`);
+    const m = meanOf(stages.first);
+    if (m < 2.6 || m > 3.4) warn(file, `${label}.first: average difficulty is ${m.toFixed(2)}; the first part should be of middling difficulty (about 3)`);
+  };
+
   const mocks: TestDef[] = [];
   for (const { id, file } of list(path.join('tests', 'mocks'), /\.ya?ml$/)) {
     const raw = tryRead(file, parseYaml);
@@ -323,15 +424,29 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
     if (!data) continue;
     for (const key of Object.keys(data.sections))
       if (!sections.has(key)) error(file, `sections.${key}: not a section in exam.yaml`);
+    const stagesOf = new Map<string, Stages>();
     for (const s of config.sections) {
-      const ids = data.sections[s.id];
-      if (!ids) {
+      const entry = data.sections[s.id];
+      if (!entry) {
         error(file, `sections.${s.id}: missing (a mock must include every section)`);
         continue;
       }
-      if (ids.length !== s.questionCount)
-        error(file, `sections.${s.id}: has ${ids.length} questions, the exam format needs ${s.questionCount}`);
-      checkSequence(file, `sections.${s.id}`, ids, s.id);
+      if (s.parts) {
+        if (Array.isArray(entry)) {
+          error(file, `sections.${s.id}: this section has two parts; list them as first: [...] and second: { easier, medium, harder }`);
+          continue;
+        }
+        stagesOf.set(s.id, entry);
+        checkStages(file, `sections.${s.id}`, entry, s);
+        continue;
+      }
+      if (!Array.isArray(entry)) {
+        error(file, `sections.${s.id}: only a section with parts in exam.yaml takes first/second; list the questions instead`);
+        continue;
+      }
+      if (entry.length !== s.questionCount)
+        error(file, `sections.${s.id}: has ${entry.length} questions, the exam format needs ${s.questionCount}`);
+      checkSequence(file, `sections.${s.id}`, entry, s.id);
     }
     mocks.push({
       id,
@@ -340,7 +455,10 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
       title: data.title,
       description: data.description,
       sections: config.sections.map((s) => {
-        const questions = data.sections[s.id] ?? [];
+        const stages = stagesOf.get(s.id);
+        if (stages) return { id: s.id, questions: stageQuestions(stages), length: s.questionCount, timeMinutes: s.timeMinutes, stages };
+        const entry = data.sections[s.id];
+        const questions = Array.isArray(entry) ? entry : [];
         return { id: s.id, questions, length: questions.length, timeMinutes: s.timeMinutes };
       }),
     });
@@ -388,6 +506,7 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
     for (const s of config.sections) {
       const pool = data.sections[s.id];
       if (!pool) error(file, `sections.${s.id}: missing (an adaptive mock must include every section)`);
+      else if (s.parts) error(file, `sections.${s.id}: this section has two parts, so its mocks go in tests/mocks/ with first and second`);
       else if (!s.adaptive) error(file, `sections.${s.id}: exam.yaml has no adaptive plan for this section`);
       else checkPool(file, `sections.${s.id}`, pool, s);
     }
@@ -447,11 +566,15 @@ export function loadExam(examId: string, root = CONTENT_ROOT): { bundle: ExamBun
 
   const referencedPassages = new Set([...questions.values()].map((q) => (q.data.type === 'reading-comprehension' ? q.data.passage : '')));
   for (const p of passages.values()) if (!referencedPassages.has(p.id)) warn(p.file, 'passage is not used by any question');
-  const referencedSources = new Set([...questions.values()].map((q) => (q.data.type === 'multi-source-reasoning' ? q.data.source : '')));
+  const referencedSources = new Set([...questions.values()].map((q) => ('source' in q.data && q.data.source ? q.data.source : '')));
   for (const s of sources.values()) if (!referencedSources.has(s.id)) warn(s.file, 'source set is not used by any question');
+  for (const f of figures.values()) if (!usedFigures.has(f.id)) warn(f.file, 'figure is not used by any question');
 
-  return { bundle: { id: examId, config, questions, passages, sources, mocks, practice, notes }, issues };
+  return { bundle: { id: examId, config, questions, passages, sources, figures, mocks, practice, notes }, issues };
 }
+
+/** Every question of a two-part measure: the first section, then the easier, medium and harder second sections. */
+export const stageQuestions = (s: Stages) => [...s.first, ...TIERS.flatMap((t) => s.second[t])];
 
 // ------------------------------------------------------------ adaptive plans
 
@@ -502,12 +625,6 @@ export function poolSupply(pool: QuestionData[]) {
   return { counts, groupSizes };
 }
 
-function groupKey(q: QuestionData): string | null {
-  if (q.type === 'reading-comprehension') return `passage "${q.passage}"`;
-  if (q.type === 'multi-source-reasoning') return `source set "${q.source}"`;
-  return null;
-}
-
 function checkUnique(values: string[], label: string, report: (m: string) => void) {
   if (new Set(values).size !== values.length) report(`${label}: options must be unique`);
 }
@@ -520,8 +637,13 @@ function checkChart(chart: Chart, report: (m: string) => void) {
   });
 }
 
-function checkQuestion(q: QuestionData, report: (m: string) => void) {
+function checkQuestion(q: QuestionData, stem: string, report: (m: string) => void) {
   if ('choices' in q) checkUnique(q.choices, 'choices', report);
+  if ((q.type === 'multiple-answer' || (q.type === 'reading-comprehension' && q.format === 'multiple-answer')) && Array.isArray(q.answer))
+    q.answer.forEach((a, i) => {
+      if ('ABCDEFGH'.indexOf(a) >= q.choices.length) report(`answer.${i}: "${a}" is past the last choice`);
+    });
+  const blanks = stem.split(BLANK).length - 1;
   if ('labels' in q && 'statements' in q) {
     q.statements.forEach((s, i) => {
       if (!q.labels.includes(s.answer)) report(`statements.${i}.answer: "${s.answer}" must be one of ${q.labels.join(' / ')}`);
@@ -553,7 +675,45 @@ function checkQuestion(q: QuestionData, report: (m: string) => void) {
         if (!q.options.includes(a)) report(`answer.${i}: "${a}" is not one of the options`);
       });
       break;
+    case 'text-completion': {
+      if (blanks !== q.blanks.length) report(`the stem has ${blanks} ${BLANK} blank(s), but blanks lists ${q.blanks.length}`);
+      const size = q.blanks.length === 1 ? 5 : 3;
+      q.blanks.forEach((b, i) => {
+        if (b.options.length !== size)
+          report(`blanks.${i}.options: ${q.blanks.length === 1 ? 'a single blank has 5 options' : 'with two or three blanks, each has 3 options'}, not ${b.options.length}`);
+        if (!b.options.includes(b.answer)) report(`blanks.${i}.answer: "${b.answer}" is not one of the options`);
+        checkUnique(b.options, `blanks.${i}.options`, report);
+      });
+      break;
+    }
+    case 'sentence-equivalence':
+      if (blanks !== 1) report(`the stem must have exactly one ${BLANK} blank, not ${blanks}`);
+      break;
+    case 'numeric-entry': {
+      const value = parseNumber(q.answer, q.entry);
+      if (!value) report(`answer: "${q.answer}" is not ${q.entry === 'fraction' ? 'a fraction such as 3/8' : 'an integer or decimal such as -12.5'}`);
+      else if (q.entry === 'fraction' && value.d === 0n) report('answer: the denominator is 0');
+      break;
+    }
   }
+}
+
+/** A select-sentence answer must be exactly one sentence of the passage, in a paragraph the question allows. */
+function checkSelectSentence(q: Extract<QuestionData, { format: 'select-sentence' }>, body: string, report: (m: string) => void) {
+  const problem = unsplittable(body);
+  if (problem) return report(`the passage can't be used for select-sentence questions: ${problem}`);
+  const sentences = splitSentences(body);
+  const paragraphs = Math.max(0, ...sentences.map((s) => s.paragraph));
+  for (const p of q.paragraphs ?? []) if (p > paragraphs) report(`paragraphs: the passage has only ${paragraphs} paragraph(s)`);
+  const allowed = sentences.filter((s) => !q.paragraphs || q.paragraphs.includes(s.paragraph));
+  if (allowed.length < 3) report(`only ${allowed.length} sentence(s) can be selected; give the test taker at least 3 to choose from`);
+  const hits = allowed.filter((s) => s.text === normalize(q.answer));
+  if (hits.length !== 1)
+    report(
+      hits.length
+        ? `answer: the sentence appears ${hits.length} times`
+        : `answer: not a sentence of the passage${q.paragraphs ? ` in paragraph(s) ${q.paragraphs.join(', ')}` : ''}. The passage splits into: ${allowed.map((s) => JSON.stringify(s.text.slice(0, 40))).join(', ')}`,
+    );
 }
 
 /** Parses a table cell as a number, allowing thousands separators ("1,890"). */

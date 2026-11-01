@@ -4,7 +4,7 @@ import { activeQuestionId, canEdit, changesLeft, currentSection, sectionElapsed,
 import { sectionLength } from '../../lib/engine/adaptive.ts';
 import { isComplete } from '../../lib/engine/grading.ts';
 import { reportIssueUrl } from '../../lib/site.ts';
-import type { PlayerProps } from './context.ts';
+import { sectionLabel, type PlayerProps } from './context.ts';
 import { ChevronLeft, ChevronRight, ExitIcon, ListIcon } from './icons.tsx';
 import Shell, { type TimerInfo } from './Shell.tsx';
 
@@ -66,7 +66,7 @@ export default function QuestionScreen(props: PlayerProps) {
   return (
     <Shell
       title={payload.test.title}
-      subtitle={meta.name}
+      subtitle={sectionLabel(meta)}
       timer={sectionTimer(props)}
       tools={props.tools}
       counter={`Question ${index + 1} of ${total}`}

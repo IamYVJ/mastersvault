@@ -17,6 +17,7 @@ const listHref = url(`/${exam.id}/${kindPath}/`);
 const takeHref = url(`/${exam.id}/${kindPath}/${test.id}/take/`);
 const dataHref = url(dataPath(exam.id, kindPath, test.id));
 const testKey = `${exam.id}/${kindPath}/${test.id}`;
+const staged = test.sections.some((s) => s.stages);
 ---
 
 <div class="container page">
@@ -30,6 +31,15 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
         <p>
           This mock is <strong>adaptive</strong>, like the real exam: each question is chosen from your answers so far, so a
           strong answer brings a harder question and a weak one an easier question. The score estimate takes the difficulty of
+          the questions you were given into account.
+        </p>
+      )
+    }
+    {
+      staged && (
+        <p>
+          Like the real exam, this mock adapts <strong>section by section</strong>: each measure has two sections, and how you
+          do in the first decides whether the second is easier, medium or harder. The score estimate takes the difficulty of
           the questions you were given into account.
         </p>
       )
@@ -51,8 +61,14 @@ const testKey = `${exam.id}/${kindPath}/${test.id}`;
           rows.map((s) => (
             <tr>
               <td>{s.config.name}</td>
-              <td class="num">{s.length}</td>
-              <td class="num">{s.timeMinutes} min</td>
+              <td class="num">
+                {s.length}
+                {s.stages && <span class="muted small"> ({s.config.parts!.map((p) => p.questionCount).join(' + ')})</span>}
+              </td>
+              <td class="num">
+                {s.timeMinutes} min
+                {s.stages && <span class="muted small"> ({s.config.parts!.map((p) => p.timeMinutes).join(' + ')})</span>}
+              </td>
               <td>{s.config.tools.length ? s.config.tools.map((x) => x[0].toUpperCase() + x.slice(1)).join(', ') : 'None'}</td>
             </tr>
           ))

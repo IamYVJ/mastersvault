@@ -1,5 +1,6 @@
 // Structured data (schema.org) for search engines. Everything here describes free, original,
 // unofficial practice material, so nothing claims a link to a test maker.
+import { SITE_DESCRIPTION } from './notices.ts';
 import { SITE } from './site.ts';
 import { url } from './url.ts';
 
@@ -13,7 +14,7 @@ export function websiteData(site: URL | undefined) {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE.name,
-    description: SITE.description,
+    description: SITE_DESCRIPTION(),
     url: absolute(site, '/'),
     inLanguage: 'en',
     publisher,

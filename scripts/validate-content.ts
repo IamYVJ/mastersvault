@@ -16,7 +16,10 @@ for (const [file, list] of [...byFile].sort(([a], [b]) => a.localeCompare(b))) {
 
 for (const e of exams) {
   const tests = e.mocks.length + e.practice.length;
-  console.log(`\n${e.id}: ${e.questions.size} questions, ${e.passages.size} passages, ${e.sources.size} source sets, ${tests} tests, ${e.notes.size} revision notes`);
+  const hidden = e.config.published ? '' : ' (published: false, so left out of production builds)';
+  console.log(
+    `\n${e.id}: ${e.questions.size} questions, ${e.passages.size} passages, ${e.sources.size} source sets, ${e.figures.size} figures, ${tests} tests, ${e.notes.size} revision notes${hidden}`,
+  );
 }
 console.log(`\n${errors.length} error(s), ${warnings.length} warning(s)`);
 process.exit(errors.length ? 1 : 0);

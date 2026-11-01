@@ -9,7 +9,21 @@ export const TYPE_LABELS: Record<QuestionType, string> = {
   'table-analysis': 'Table Analysis',
   'graphics-interpretation': 'Graphics Interpretation',
   'two-part-analysis': 'Two-Part Analysis',
+  'quantitative-comparison': 'Quantitative Comparison',
+  'multiple-choice': 'Multiple Choice',
+  'multiple-answer': 'Multiple Choice, One or More Answers',
+  'numeric-entry': 'Numeric Entry',
+  'text-completion': 'Text Completion',
+  'sentence-equivalence': 'Sentence Equivalence',
 };
+
+/** The four fixed Quantitative Comparison answer choices, in order A to D. */
+export const QC_CHOICES = [
+  'Quantity A is greater.',
+  'Quantity B is greater.',
+  'The two quantities are equal.',
+  'The relationship cannot be determined from the information given.',
+];
 
 /** The five fixed Data Sufficiency answer choices, in order A to E. */
 export const DS_CHOICES = [

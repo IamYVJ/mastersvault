@@ -1,16 +1,28 @@
 ---
+import { getExams } from '../../lib/content/index.ts';
 import { SITE } from '../../lib/site';
 import { url } from '../../lib/url';
 import Logo from './Logo.astro';
 
 const path = Astro.url.pathname.replace(/\/+$/, '');
-const links = [
-  { href: url('/gmat/mocks/'), label: 'Mocks' },
-  { href: url('/gmat/practice/'), label: 'Practice' },
-  { href: url('/gmat/revision/'), label: 'Revision' },
-  { href: url('/dashboard/'), label: 'Dashboard' },
-];
-const isActive = (href: string) => path.startsWith(href.replace(/\/+$/, ''));
+const isActive = (href: string) => path === href.replace(/\/+$/, '') || path.startsWith(href.replace(/\/*$/, '/'));
+// With several exams, the header names them, and inside an exam's pages it also links to that
+// exam's mocks, practice and revision. With one exam, it links to that exam's pages everywhere.
+const exams = getExams();
+const current = exams.find((e) => isActive(url(`/${e.id}/`))) ?? (exams.length === 1 ? exams[0] : undefined);
+const examLinks = exams.length > 1 ? exams.map((e) => ({ href: url(`/${e.id}/`), label: e.config.name, exam: true })) : [];
+const sectionLinks = current
+  ? [
+      { href: url(`/${current.id}/mocks/`), label: 'Mocks', exam: false },
+      { href: url(`/${current.id}/practice/`), label: 'Practice', exam: false },
+      { href: url(`/${current.id}/revision/`), label: 'Revision', exam: false },
+    ]
+  : [];
+const links = [...examLinks, ...sectionLinks, { href: url('/dashboard/'), label: 'Dashboard', exam: false }];
+// An exam's own link is marked as the current page only on its home page; on its other pages it
+// is marked as the current exam.
+const state = (l: (typeof links)[number]) =>
+  l.exam ? (path === l.href.replace(/\/+$/, '') ? 'page' : isActive(l.href) ? 'true' : undefined) : isActive(l.href) ? 'page' : undefined;
 ---
 
 <header class="site-header">
@@ -22,9 +34,9 @@ const isActive = (href: string) => path.startsWith(href.replace(/\/+$/, ''));
     <nav aria-label="Main">
       <ul>
         {
-          links.map((l) => (
-            <li>
-              <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined}>
+          links.map((l, i) => (
+            <li class:list={{ 'is-exam': l.exam, 'is-after-exams': !l.exam && i > 0 && links[i - 1].exam }}>
+              <a href={l.href} aria-current={state(l)}>
                 {l.label}
               </a>
             </li>
@@ -107,9 +119,18 @@ const isActive = (href: string) => path.startsWith(href.replace(/\/+$/, ''));
   nav a:hover {
     color: var(--text);
   }
-  nav a[aria-current='page'] {
+  nav a[aria-current='page'],
+  nav a[aria-current='true'] {
     color: var(--text);
     border-bottom-color: var(--text);
+  }
+  .is-exam a {
+    font-weight: 600;
+  }
+  /* A thin rule between the exams and the current exam's pages. */
+  .is-after-exams {
+    padding-left: 22px;
+    border-left: 1px solid var(--border);
   }
   .theme-toggle {
     display: inline-grid;

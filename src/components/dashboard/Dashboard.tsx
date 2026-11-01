@@ -11,10 +11,16 @@ import TrendChart from './TrendChart.tsx';
 
 export interface Catalog {
   tests: Record<string, { title: string; href?: string }>;
+  /** Keyed "<exam>/<section>/<topic>". */
   topics: Record<string, { name: string; section: string; noteHref?: string }>;
-  sections: { id: string; name: string; shortName: string }[];
-  links: { practice: string; mocks: string; revision: string; attempt: string };
+  exams: { id: string; name: string; sections: { id: string; name: string; shortName: string }[]; links: { practice: string; mocks: string; revision: string } }[];
+  links: { attempt: string };
 }
+type ExamInfo = Catalog['exams'][number];
+
+/** The exam a test or attempt belongs to, from its key ("gmat/mocks/01" is a GMAT test). */
+const examOf = (testKey: string) => testKey.split('/')[0];
+const EXAM_KEY = 'mv:dashboard-exam';
 
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
 const when = (t: number) => new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -35,34 +41,68 @@ export default function Dashboard({ catalog }: { catalog: Catalog }) {
   }, []);
   useEffect(refresh, [refresh]);
 
-  const sum = useMemo(() => totals(history), [history]);
-  const unfinished = useMemo(() => inProgress(attempts), [attempts]);
-  const order = catalog.sections.map((s) => s.id);
-  const { trends, attempts: ordered } = useMemo(() => sectionTrends(history, order), [history, order.join()]);
-  const focus = useMemo(() => topicStats(history).filter((t) => t.accuracy < 1).slice(0, 6), [history]);
+  // Each exam's progress is shown separately. Start with the exam used most recently.
+  const [chosen, setChosen] = useState<string | null>(null);
+  const latest = [...history.map((h) => ({ key: h.testKey, at: h.finishedAt })), ...attempts.map((a) => ({ key: a.testKey, at: a.lastTick }))].sort((a, b) => b.at - a.at)[0];
+  const remembered = (() => {
+    try {
+      return localStorage.getItem(EXAM_KEY);
+    } catch {
+      return null;
+    }
+  })();
+  const known = (id: string | null | undefined) => (id && catalog.exams.some((e) => e.id === id) ? id : null);
+  const examId = known(chosen) ?? known(latest && examOf(latest.key)) ?? known(remembered) ?? catalog.exams[0]?.id;
+  const exam: ExamInfo = catalog.exams.find((e) => e.id === examId) ?? { id: '', name: '', sections: [], links: { practice: '', mocks: '', revision: '' } };
+  const choose = (id: string) => {
+    setChosen(id);
+    try {
+      localStorage.setItem(EXAM_KEY, id);
+    } catch {
+      /* storage unavailable */
+    }
+  };
+  const mine = useMemo(() => history.filter((h) => examOf(h.testKey) === exam.id), [history, exam.id]);
+  const myAttempts = useMemo(() => attempts.filter((a) => examOf(a.testKey) === exam.id), [attempts, exam.id]);
+
+  const sum = useMemo(() => totals(mine), [mine]);
+  const unfinished = useMemo(() => inProgress(myAttempts), [myAttempts]);
+  const order = exam.sections.map((s) => s.id);
+  const { trends, attempts: ordered } = useMemo(() => sectionTrends(mine, order), [mine, order.join()]);
+  const focus = useMemo(() => topicStats(mine).filter((t) => t.accuracy < 1).slice(0, 6), [mine]);
 
   if (!loaded) return <p className="muted">Loading your progress…</p>;
 
-  const empty = !history.length && !unfinished.length;
+  const empty = !mine.length && !unfinished.length;
   const showTrend = trends.some((t) => t.points.length > 1);
 
   return (
     <div className="dash">
+      {catalog.exams.length > 1 && (
+        <div className="dash-exams" role="group" aria-label="Exam">
+          {catalog.exams.map((e) => (
+            <button key={e.id} type="button" className="btn" aria-pressed={e.id === exam.id} onClick={() => choose(e.id)}>
+              {e.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {empty && (
         <div className="notice">
           <p>
-            <strong>No tests taken yet.</strong> Your results will appear here as you practise. They're stored only in this
+            <strong>No {catalog.exams.length > 1 ? `${exam.name} ` : ''}tests taken yet.</strong> Your results will appear here as you practise. They're stored only in this
             browser.
           </p>
           <p style={{ margin: 0 }}>
-            Start with a <a href={catalog.links.practice}>practice set</a> or read the <a href={catalog.links.revision}>revision notes</a>.
+            Start with a <a href={exam.links.practice}>practice set</a> or read the <a href={exam.links.revision}>revision notes</a>.
           </p>
         </div>
       )}
 
       {unfinished.length > 0 && <Unfinished items={unfinished} catalog={catalog} />}
 
-      {history.length > 0 && (
+      {mine.length > 0 && (
         <>
           <section className="dash-section" aria-labelledby="dash-summary">
             <h2 id="dash-summary" className="visually-hidden">
@@ -88,7 +128,7 @@ export default function Dashboard({ catalog }: { catalog: Catalog }) {
               <TrendChart
                 trends={trends}
                 sectionOrder={order}
-                shortNames={Object.fromEntries(catalog.sections.map((s) => [s.id, s.shortName]))}
+                shortNames={Object.fromEntries(exam.sections.map((s) => [s.id, s.shortName]))}
                 attempts={ordered}
               />
             </section>
@@ -97,7 +137,7 @@ export default function Dashboard({ catalog }: { catalog: Catalog }) {
           <section className="dash-section">
             <h2>Where to focus</h2>
             {focus.length ? (
-              <FocusTable rows={focus} catalog={catalog} />
+              <FocusTable rows={focus} catalog={catalog} exam={exam} />
             ) : (
               <p className="muted">Answer at least two questions on a topic to see how you're doing on it.</p>
             )}
@@ -105,7 +145,7 @@ export default function Dashboard({ catalog }: { catalog: Catalog }) {
 
           <section className="dash-section">
             <h2>History</h2>
-            <HistoryTable history={history} catalog={catalog} />
+            <HistoryTable history={mine} catalog={catalog} />
           </section>
         </>
       )}
@@ -152,8 +192,8 @@ function Unfinished({ items, catalog }: { items: InProgress[]; catalog: Catalog 
   );
 }
 
-function FocusTable({ rows, catalog }: { rows: ReturnType<typeof topicStats>; catalog: Catalog }) {
-  const sectionName = (id: string) => catalog.sections.find((s) => s.id === id)?.name ?? id;
+function FocusTable({ rows, catalog, exam }: { rows: ReturnType<typeof topicStats>; catalog: Catalog; exam: ExamInfo }) {
+  const sectionName = (id: string) => exam.sections.find((s) => s.id === id)?.name ?? id;
   return (
     <div className="table-wrap" tabIndex={0} role="region" aria-label="Weakest topics">
       <table className="data dash-focus">
@@ -176,7 +216,7 @@ function FocusTable({ rows, catalog }: { rows: ReturnType<typeof topicStats>; ca
         </thead>
         <tbody>
           {rows.map((r) => {
-            const info = catalog.topics[`${r.section}/${r.topic}`];
+            const info = catalog.topics[`${exam.id}/${r.section}/${r.topic}`];
             return (
               <tr key={`${r.section}/${r.topic}`}>
                 <td>

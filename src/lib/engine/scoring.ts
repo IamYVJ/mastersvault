@@ -71,7 +71,8 @@ export function estimateTotal(
 /** Estimates are only meaningful for full-length sections. */
 export function scoreEstimates(payload: TestPayload, results: SectionResult[]) {
   if (payload.test.kind !== 'mock') return null;
-  const ranges = results.map((r) => payload.sections.find((s) => s.id === r.id)!.score);
+  // A two-part measure's result carries the measure's id, not either part's.
+  const ranges = results.map((r) => payload.sections.find((s) => s.id === r.id || s.measure?.id === r.id)!.score);
   const sections = results.map((r, i) => estimateSection(r.questions, ranges[i]));
   return { sections, total: estimateTotal(sections, ranges, payload.exam.totalScore) };
 }

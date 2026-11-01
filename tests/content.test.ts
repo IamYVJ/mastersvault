@@ -58,6 +58,8 @@ function write(rel: string, text: string) {
 
 const exam = `
 name: Demo
+testMaker: the Demo Board (DB)
+trademark: Demo is a trademark of the Demo Board.
 description: Demo exam
 sections:
   - id: quant

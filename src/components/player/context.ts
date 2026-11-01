@@ -18,3 +18,6 @@ export interface PlayerProps {
   requestExit: () => void;
   tools: ToolBar;
 }
+
+/** A section's name as shown in the player: "Quantitative Reasoning, section 2 of 2" for part of a two-part measure. */
+export const sectionLabel = (s: { name: string; measure?: { part: number } }) => (s.measure ? `${s.name}, section ${s.measure.part} of 2` : s.name);

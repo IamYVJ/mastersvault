@@ -1,17 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
-import { DISCLAIMER, SITE } from '../lib/site';
+import { DISCLAIMER, TEST_MAKERS } from '../lib/notices.ts';
+import { SITE } from '../lib/site';
 ---
 
 <Base title="Disclaimer" description="MastersVault is independent and not affiliated with any test maker.">
   <div class="container page prose">
     <h1>Disclaimer</h1>
-    <p class="notice">{DISCLAIMER}</p>
+    <p class="notice">{DISCLAIMER()}</p>
 
     <h2>No affiliation</h2>
     <p>
       {SITE.name} is an independent educational project. It is not affiliated with, endorsed by, sponsored by or
-      otherwise connected to the Graduate Management Admission Council (GMAC), Pearson VUE or any other organisation
+      otherwise connected to {TEST_MAKERS()}, their test-delivery partners or any other organisation
       that writes, owns or administers an admissions test. Exam names appear on this site only to describe what the
       practice material is for.
     </p>

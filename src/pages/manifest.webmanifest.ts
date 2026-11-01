@@ -1,6 +1,7 @@
 // Web app manifest: lets the site be installed to a phone's home screen or as a desktop app.
 // Generated here, not kept in public/, so that every path includes the site's base path.
 import type { APIRoute } from 'astro';
+import { SITE_DESCRIPTION } from '../lib/notices.ts';
 import { SITE } from '../lib/site.ts';
 import { url } from '../lib/url.ts';
 
@@ -8,7 +9,7 @@ export const GET: APIRoute = () => {
   const manifest = {
     name: `${SITE.name}: exam practice`,
     short_name: SITE.name,
-    description: SITE.description,
+    description: SITE_DESCRIPTION(),
     start_url: url('/'),
     scope: url('/'),
     display: 'standalone',

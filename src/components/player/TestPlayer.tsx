@@ -7,6 +7,8 @@ import {
   type Action,
   type ActionInput,
   type Attempt,
+  activeQuestionId,
+  canEdit,
   createAttempt,
   currentSection,
   isTimerRunning,
@@ -87,7 +89,11 @@ function initialize(payload: TestPayload, testKey: string): { attempt: Attempt; 
   if (saved && saved.hash === payload.hash && saved.phase !== 'setup')
     return { attempt: reduce(saved, { type: 'resume', now }, payload), notice: null };
   const updated = !!saved && saved.hash !== payload.hash && saved.phase !== 'setup' && saved.phase !== 'results';
-  return { attempt: createAttempt(payload, testKey, now), notice: updated ? 'updated' : null };
+  const attempt = createAttempt(payload, testKey, now);
+  // Dev server only: ?order=quant-1,quant-2,... fixes a random section order, for the authoring walk.
+  const order = import.meta.env.DEV ? params.get('order')?.split(',') : undefined;
+  if (order && order.length === attempt.order.length && attempt.order.every((id) => order.includes(id))) attempt.order = order;
+  return { attempt, notice: updated ? 'updated' : null };
 }
 
 function Player({ payload, testKey, exitUrl }: { payload: TestPayload; testKey: string; exitUrl: string }) {
@@ -161,6 +167,14 @@ function Player({ payload, testKey, exitUrl }: { payload: TestPayload; testKey: 
   useEffect(() => setOpenTools([]), [sec?.id, inSection]);
   const toggleTool = useCallback((t: Tool) => setOpenTools((o) => (o.includes(t) ? o.filter((x) => x !== t) : [...o, t])), []);
   const tools: ToolBar = { available, open: openTools, toggle: toggleTool };
+  const sectionMeta = payload.sections.find((s) => s.id === sec?.id);
+  // Transfer Display fills the answer box of a one-box Numeric Entry question.
+  const onScreen = activeQuestionId(attempt);
+  const entry = onScreen ? payload.questions[onScreen].response : null;
+  const onTransfer =
+    entry?.kind === 'numeric' && entry.entry === 'decimal' && canEdit(attempt, rules)
+      ? (display: string) => act({ type: 'answer', value: display })
+      : undefined;
 
   const props: PlayerProps = { payload, attempt, rules, act, requestExit, tools };
 
@@ -208,7 +222,7 @@ function Player({ payload, testKey, exitUrl }: { payload: TestPayload; testKey: 
           hidden={!openTools.includes('calculator')}
           onClose={() => toggleTool('calculator')}
         >
-          <Calculator />
+          <Calculator order={sectionMeta?.calculator} onTransfer={onTransfer} />
         </FloatingPanel>
       )}
       {available.includes('whiteboard') && (

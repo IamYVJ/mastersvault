@@ -1,10 +1,10 @@
 // Entry point for Astro pages and scripts.
 import path from 'node:path';
-import { CONTENT_ROOT, listExamIds, loadExam, type ExamBundle, type Issue } from './load.ts';
+import { CONTENT_ROOT, listExamIds as allExamIds, loadExam, type ExamBundle, type Issue } from './load.ts';
 import { renderDocument } from './markdown.ts';
 import { renderPassage, renderQuestion, renderSourceSet } from './payload.ts';
 
-export { GENERAL_NOTES, listExamIds, type ExamBundle, type Issue, type Note } from './load.ts';
+export { GENERAL_NOTES, type ExamBundle, type Issue, type Note } from './load.ts';
 export { renderDocument, type Heading } from './markdown.ts';
 export { buildTestPayload, renderQuestion, renderPassage, renderSourceSet } from './payload.ts';
 
@@ -28,6 +28,15 @@ export function getExam(examId: string): ExamBundle {
   return bundle;
 }
 
+/**
+ * The exams the site shows. One with `published: false` in its exam.yaml is left out of production
+ * builds, unless the build is run with MV_INCLUDE_UNPUBLISHED=1 (to test it locally in a real build).
+ */
+export function listExamIds(): string[] {
+  const all = !useCache || process.env.MV_INCLUDE_UNPUBLISHED === '1';
+  return allExamIds().filter((id) => all || getExam(id).config.published);
+}
+
 export function getExams(): ExamBundle[] {
   return listExamIds().map(getExam);
 }
@@ -36,7 +45,7 @@ export function getExams(): ExamBundle[] {
 export function checkContent(root = CONTENT_ROOT): { exams: ExamBundle[]; issues: Issue[] } {
   const exams: ExamBundle[] = [];
   const issues: Issue[] = [];
-  const ids = listExamIds(root);
+  const ids = allExamIds(root);
   if (!ids.length) issues.push({ level: 'error', file: 'content', message: 'no exams found (expected content/<exam>/exam.yaml)' });
   for (const id of ids) {
     const { bundle, issues: found } = loadExam(id, root);
@@ -51,7 +60,7 @@ export function checkContent(root = CONTENT_ROOT): { exams: ExamBundle[]; issues
     // Only render files that passed validation; broken data can't be rendered safely.
     const broken = new Set(found.filter((i) => i.level === 'error').map((i) => i.file));
     const ok = (file: string) => !broken.has(rel(file));
-    for (const q of bundle.questions.values()) if (ok(q.file)) report(q.file, renderQuestion(q).problems);
+    for (const q of bundle.questions.values()) if (ok(q.file)) report(q.file, renderQuestion(q, bundle).problems);
     for (const p of bundle.passages.values()) if (ok(p.file)) report(p.file, renderPassage(bundle, p.id).problems);
     for (const s of bundle.sources.values()) if (ok(s.file)) report(s.file, renderSourceSet(bundle, s.id).problems);
     for (const n of bundle.notes.values()) if (ok(n.file)) report(n.file, renderDocument(n.body).problems);

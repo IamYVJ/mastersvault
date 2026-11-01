@@ -301,6 +301,210 @@
   margin-left: 8px;
 }
 
+/* ---------------------------------------- one or more answers (GRE) */
+.q-pick {
+  margin: 0 0 4px;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.q-choices.is-multi .q-choice input {
+  border-radius: 0;
+}
+
+/* ------------------------------------ Quantitative Comparison (GRE) */
+.q-compare {
+  width: 100%;
+  margin: 4px 0 20px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.q-compare th {
+  padding: 0 12px 6px;
+  border-bottom: 1px solid var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.q-compare td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+.q-compare td + td,
+.q-compare th + th {
+  border-left: 1px solid var(--border);
+}
+
+/* -------------------------------------------------------------- figures */
+.q-figure {
+  max-width: 420px;
+  margin: 4px auto 20px;
+  color: var(--text);
+}
+.q-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.q-figure svg text {
+  fill: currentColor;
+  font-family: var(--font);
+}
+
+/* ----------------------------------------------- numeric entry (GRE) */
+.q-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.q-entry-box {
+  width: 9.5em;
+  padding: 6px 10px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: right;
+}
+.q-entry-box:disabled {
+  opacity: 1;
+}
+.q-entry-box.is-correct {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px var(--success);
+}
+.q-entry-box.is-wrong {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+.q-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.q-fraction .q-entry-box {
+  width: 6.5em;
+}
+.q-fraction-bar {
+  border-top: 2px solid var(--text);
+}
+
+/* ------------------------------------- Text Completion and blanks (GRE) */
+.q-blank {
+  display: inline-block;
+  min-width: 6.5em;
+  margin: 0 0.15em;
+  border-bottom: 1px solid var(--text);
+  text-align: center;
+  line-height: 1.2;
+}
+.q-blank-label {
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+.q-blanks {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+  gap: 16px;
+  max-width: 760px;
+}
+.q-blanks.is-1 {
+  max-width: 320px;
+}
+.q-blanks.is-2 {
+  --cols: 2;
+}
+.q-blanks.is-3 {
+  --cols: 3;
+}
+.q-blank-col {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.q-blank-col legend {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.q-blank-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-bottom-width: 0;
+  background: var(--surface);
+  cursor: pointer;
+}
+.q-blank-option:last-child {
+  border-bottom-width: 1px;
+}
+.q-blank-option input {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  accent-color: var(--accent);
+}
+.q-blank-option.is-chosen {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--text);
+}
+.q-blank-option.is-correct {
+  background: var(--success-soft);
+  box-shadow: inset 3px 0 0 var(--success);
+}
+.q-blank-option.is-wrong {
+  background: var(--danger-soft);
+  box-shadow: inset 3px 0 0 var(--danger);
+}
+.q-blank-option:has(input:disabled) {
+  cursor: default;
+}
+@media (max-width: 640px) {
+  .q-blanks.is-2,
+  .q-blanks.is-3 {
+    --cols: 1;
+  }
+}
+
+/* ------------------------------------------- select a sentence (GRE) */
+.q-sentence.is-selectable {
+  cursor: pointer;
+  border-radius: 2px;
+}
+.q-sentence.is-selectable:hover {
+  background: var(--accent-soft);
+}
+.q-sentence.is-selectable:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+.q-sentence.is-chosen {
+  background: var(--accent-soft);
+  box-shadow: 0 1px 0 var(--text);
+}
+.q-sentence.is-correct {
+  background: var(--success-soft);
+  box-shadow: 0 1px 0 var(--success);
+}
+.q-sentence.is-wrong {
+  background: var(--danger-soft);
+  box-shadow: 0 1px 0 var(--danger);
+}
+.q-sentence-status p {
+  margin: 0 0 8px;
+}
+
 /* ------------------------------------------------------- data table (TA) */
 .q-table-tools {
   display: flex;

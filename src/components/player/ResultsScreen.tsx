@@ -6,6 +6,7 @@ import { TYPE_LABELS } from '../../lib/content/labels.ts';
 import { formatDuration, summarize, type SectionResult } from '../../lib/engine/results.ts';
 import { breakdowns, pacing, scoreEstimates, type BreakdownRow, type Estimate } from '../../lib/engine/scoring.ts';
 import { reportIssueUrl } from '../../lib/site.ts';
+import type { Tier } from '../../lib/content/schema.ts';
 import type { TestPayload } from '../../lib/content/types.ts';
 import type { Attempt } from '../../lib/engine/attempt.ts';
 import { BookmarkIcon, CheckIcon, ChevronLeft, ChevronRight, ClockIcon, CrossIcon, ExitIcon, ListIcon } from './icons.tsx';
@@ -157,10 +158,23 @@ function SectionCard({ s, estimate }: { s: SectionResult; estimate?: Estimate })
           </dd>
         </div>
       </dl>
-      {s.endedBy === 'time' && <p className="player-warn">Time ran out in this section.</p>}
+      {s.parts && (
+        <ul className="player-parts">
+          {s.parts.map((p) => (
+            <li key={p.id}>
+              Section {p.part}
+              {p.tier && ` (${TIER_LABELS[p.tier]})`}: {p.correct} of {p.total} correct
+              {p.endedBy === 'time' && ', time ran out'}
+            </li>
+          ))}
+        </ul>
+      )}
+      {s.endedBy === 'time' && !s.parts && <p className="player-warn">Time ran out in this section.</p>}
     </div>
   );
 }
+
+const TIER_LABELS: Record<Tier, string> = { easier: 'easier version', medium: 'medium version', harder: 'harder version' };
 
 function BreakdownTable({ title, rows }: { title: string; rows: BreakdownRow[] }) {
   return (

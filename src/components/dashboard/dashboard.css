@@ -12,6 +12,17 @@
 }
 
 /* stat tiles */
+.dash-exams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.dash-exams .btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
 .dash-tiles {
   display: grid;
   gap: 28px 36px;

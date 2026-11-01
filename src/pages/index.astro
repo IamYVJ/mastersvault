@@ -15,7 +15,7 @@ const figures = [
 const features = [
   {
     title: 'Full-length mocks',
-    body: 'Timed, three-section tests with the same flow as the real exam: choose your section order, bookmark questions, take the optional break, then review and edit.',
+    body: "Timed tests with the real exam's sections and flow: section order, bookmarks, breaks and the review screen work as they do on test day.",
   },
   {
     title: 'Section practice',
@@ -42,8 +42,20 @@ const features = [
         The test screen works like the real one.
       </p>
       <div class="actions">
-        <a class="btn btn-primary" href={url('/gmat/')}>Start GMAT prep</a>
-        <a class="btn" href={url('/gmat/practice/')}>Try a practice set</a>
+        {
+          exams.length === 1 ? (
+            <>
+              <a class="btn btn-primary" href={url(`/${exams[0].id}/`)}>Start {exams[0].config.name} prep</a>
+              <a class="btn" href={url(`/${exams[0].id}/practice/`)}>Try a practice set</a>
+            </>
+          ) : (
+            exams.map((e, i) => (
+              <a class={`btn ${i === 0 ? 'btn-primary' : ''}`} href={url(`/${e.id}/`)}>
+                Start {e.config.name} prep
+              </a>
+            ))
+          )
+        }
       </div>
       <dl class="figures">
         {

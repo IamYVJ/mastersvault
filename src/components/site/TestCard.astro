@@ -13,7 +13,7 @@ const minutes = test.sections.reduce((n, s) => n + s.timeMinutes, 0);
 const href = url(`/${exam.id}/${test.kind === 'mock' ? 'mocks' : 'practice'}/${test.id}/`);
 const difficulties = test.sections.flatMap((s) => s.questions.map((q) => exam.questions.get(q)!.data.difficulty));
 const avg = difficulties.reduce((a, b) => a + b, 0) / difficulties.length;
-const level = test.adaptive ? 'Adaptive' : avg < 2.5 ? 'Easier' : avg < 3.5 ? 'Medium' : 'Harder';
+const level = test.adaptive || test.sections.some((s) => s.stages) ? 'Adaptive' : avg < 2.5 ? 'Easier' : avg < 3.5 ? 'Medium' : 'Harder';
 ---
 
 <li>

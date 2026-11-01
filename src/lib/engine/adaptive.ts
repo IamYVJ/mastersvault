@@ -15,6 +15,10 @@
 //
 // Unanswered questions count as incorrect. Changing an answer in review & edit changes the score,
 // but not which questions were served, as on the real exam.
+//
+// Two-part measures (section-level adaptive, as on the GRE) work differently: the first section is
+// fixed, and when the second begins the engine picks one of its three versions (chooseTier).
+import { TIERS, type Tier } from '../content/tiers.ts';
 import type { AdaptivePlan, AdaptiveSlot, ResponseValue, TestPayload } from '../content/types.ts';
 import { isCorrect } from './grading.ts';
 import { estimateAbility } from './scoring.ts';
@@ -27,7 +31,21 @@ const JITTER = 0.15;
 /** The number of questions a test taker answers in a section. */
 export function sectionLength(payload: TestPayload, sectionId: string): number {
   const s = payload.sections.find((x) => x.id === sectionId)!;
-  return s.adaptive?.length ?? s.questionIds.length;
+  return s.adaptive?.length ?? s.tiers?.medium.length ?? s.questionIds.length;
+}
+
+/**
+ * The version of a two-part measure's second section to serve, from the answers in its first section:
+ * the one whose average difficulty is closest to the target difficulty (θ + 3), as for single questions.
+ * Under this model the choice depends only on how many first-section answers were right. A tie goes
+ * to the medium version.
+ */
+export function chooseTier(payload: TestPayload, tiers: Record<Tier, string[]>, first: string[], responses: Record<string, ResponseValue>): Tier {
+  const target = targetDifficulty(abilitySoFar(payload, first, responses).theta);
+  const mean = (t: Tier) => tiers[t].reduce((n, id) => n + payload.questions[id].difficulty, 0) / tiers[t].length;
+  let best: Tier = 'medium';
+  for (const t of TIERS) if (Math.abs(mean(t) - target) < Math.abs(mean(best) - target) - 1e-9) best = t;
+  return best;
 }
 
 const slotSize = (slot: AdaptiveSlot) => (slot.kind === 'single' ? 1 : slot.size);
@@ -110,7 +128,7 @@ export function seedFor(attemptId: string, sectionId: string): number {
   return h >>> 0;
 }
 
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let s = seed >>> 0;
   return () => {
     s = (s + 0x6d2b79f5) | 0;
@@ -130,6 +148,11 @@ export function servePoolInOrder(payload: TestPayload): TestPayload {
     ...payload,
     hash: `${payload.hash}-pool`,
     test: { ...payload.test, adaptive: undefined },
-    sections: payload.sections.map((s) => (s.adaptive ? { ...s, questionIds: [...s.adaptive.pool], adaptive: undefined } : s)),
+    sections: payload.sections.map((s) => {
+      if (s.adaptive) return { ...s, questionIds: [...s.adaptive.pool], adaptive: undefined };
+      // All three versions of a second section, one after the other.
+      if (s.tiers) return { ...s, questionIds: TIERS.flatMap((t) => s.tiers![t]), tiers: undefined, timeMinutes: s.timeMinutes * 3 };
+      return s;
+    }),
   };
 }

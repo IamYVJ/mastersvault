@@ -219,6 +219,8 @@ describe('adaptive mocks in content', () => {
     write(
       'exam.yaml',
       `name: Demo
+testMaker: the Demo Board (DB)
+trademark: Demo is a trademark of the Demo Board.
 description: Demo
 sections:
   - id: verbal
