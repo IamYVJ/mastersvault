@@ -17,7 +17,7 @@ async function finishQuantSampler(page: Page, answers: number[]) {
 
 test('the dashboard summarises finished tests and reopens their results', async ({ page }) => {
   await page.goto('dashboard/');
-  await expect(page.getByText('No tests taken yet.')).toBeVisible();
+  await expect(page.getByText(/No (GMAT )?tests taken yet\./)).toBeVisible();
 
   await finishQuantSampler(page, [0, 2, 3, 1, 1]); // 3 of 5 correct
   await page.goto('dashboard/');
@@ -46,7 +46,7 @@ test('progress can be exported, deleted and imported again', async ({ page }) =>
 
   await page.getByRole('button', { name: 'Delete all progress' }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(page.getByText('No tests taken yet.')).toBeVisible();
+  await expect(page.getByText(/No (GMAT )?tests taken yet\./)).toBeVisible();
 
   await page.locator('input[type=file]').setInputFiles(file);
   await expect(page.getByRole('status').filter({ hasText: 'Added 1 finished test' })).toBeVisible();
