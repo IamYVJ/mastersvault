@@ -145,7 +145,7 @@ questions: [ps-0003, ps-0007, ...]
 
 Mocks 1–12, 15 and 16 all follow the same recipe, so that scores are comparable from one mock to the next. A new mock should match it.
 
-Mocks 13, 14, 17 and 18 are **hard mocks**: the same recipe in every respect except difficulty, with each question one level harder than its slot in the table below (capped at 5). Their titles say "(hard)", and their scores will read lower than on the standard mocks. Mocks 19 and 20 are **very hard mocks**, with each question two levels harder than its slot (capped at 5), so almost every question is at difficulty 5; their titles say "(very hard)".
+Mocks 13, 14, 17, 18, 21 and 22 are **hard mocks**: the same recipe in every respect except difficulty, with each question one level harder than its slot in the table below (capped at 5). Their titles say "(hard)", and their scores will read lower than on the standard mocks. Mocks 19 and 20 are **very hard mocks**, with each question two levels harder than its slot (capped at 5), so almost every question is at difficulty 5; their titles say "(very hard)".
 
 | Section | Questions | Difficulty 1 | 2 | 3 | 4 | 5 |
 |---|---|---:|---:|---:|---:|---:|
