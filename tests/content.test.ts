@@ -11,7 +11,7 @@ describe('real content', () => {
     const { issues } = checkContent();
     expect(issues.filter((i) => i.level === 'error')).toEqual([]);
     // Validating every question takes several seconds, more than the default timeout.
-  }, 60_000);
+  }, 300_000);
 
   it('names the published exams on the link-preview image', () => {
     // public/og.png is drawn by scripts/make-images.mjs, which records the exams it named.

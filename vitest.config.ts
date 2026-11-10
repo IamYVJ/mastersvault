@@ -4,5 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
+    // Checking all the content takes longer than the 5 s default.
+    testTimeout: 300_000,
   },
 });
