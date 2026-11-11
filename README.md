@@ -4,7 +4,7 @@ Free practice for graduate admissions tests: full-length mocks, section practice
 
 > GMAT™ is a registered trademark of the Graduate Management Admission Council (GMAC). GRE® is a registered trademark of Educational Testing Service (ETS). MastersVault is an independent project and is not affiliated with, endorsed by, or sponsored by GMAC, ETS or any other test maker. All questions are original.
 
-**Status:** the GMAT content (27 mocks, five of them adaptive, 45 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them. The GRE is published too: the test screen handles every GRE question format and the section-by-section adaptive mocks, and 6 mocks, 28 practice sets (one for each question type, a harder one for each of the nine types, and five mixed sets for each measure, the fourth a medium one and the fifth a hard one) and 13 revision notes are written. Its questions are also still marked `draft`.
+**Status:** the GMAT content (27 mocks, five of them adaptive, 45 practice sets, 19 revision notes) is drafted, and every answer that can be calculated is checked by script. The questions are still marked `draft` until a person has reviewed them. The GRE is published too: the test screen handles every GRE question format and the section-by-section adaptive mocks, and 6 mocks, 30 practice sets (one for each question type, a harder one for each of the nine types, and six mixed sets for each measure, the last of them a hard one) and 13 revision notes are written. Its questions are also still marked `draft`.
 
 ## Layout
 
