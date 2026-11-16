@@ -26,18 +26,19 @@ import { url } from '../../lib/url';
 </footer>
 
 <script>
-  import { url } from '../../lib/url';
+  import { SITE_PATH } from '../../lib/pageviews';
 
   // Decorative visitor footnote. It stays hidden on every failure: an ad blocker, no connection,
-  // or no views recorded yet.
+  // or no views recorded yet. This is a module script, so it runs after the page is parsed and the
+  // beacon tag (see Base.astro) is already in the document.
   const box = document.querySelector<HTMLElement>('.visitor-counter');
   const out = document.getElementById('visitor-count');
-  // The endpoint is read off the beacon tag (see Base.astro), so the address lives in one place.
+  // The endpoint is read off the beacon tag, so the address lives in one place.
   const endpoint = document.querySelector<HTMLElement>('script[data-goatcounter]')?.dataset.goatcounter;
 
-  // Every page shows the home page's count, so the number is the same across the site. Never
-  // /counter/TOTAL.json: the GoatCounter site is shared, and that would add up other projects too.
-  const path = url('/');
+  // Every page shows the whole site's count, which every page view adds to (see src/lib/pageviews.ts).
+  // Never /counter/TOTAL.json: the GoatCounter site is shared, and that would add up other projects too.
+  const path = SITE_PATH;
   // A fixed date before the first pageview. All-time is already the default, so this doesn't change
   // the count. It gives the response its own cache key, apart from a "no data yet" reply cached earlier.
   const START = '2026-01-01';
